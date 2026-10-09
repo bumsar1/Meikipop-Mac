@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+.DS_Store
+.venv/
+mining-settings.json
+*.pkl
+*.onnx
+*.zip
+*.app/
+*.log
+native/GameAudio
+app-build/models.json
+app-build/licenses/
+app-build/*.icns
+app-build/build/
+app-build/dist/

@@ -1,0 +1,413 @@
+{
+  "profile": "Bilingual",
+  "profileIndex": 1,
+  "anki": {
+    "enable": true,
+    "server": "http://127.0.0.1:8765",
+    "tags": [],
+    "screenshot": {
+      "format": "png",
+      "quality": 92
+    },
+    "fieldTemplates": null,
+    "duplicateScope": "collection",
+    "checkForDuplicates": true,
+    "suspendNewCards": false,
+    "duplicateScopeCheckAllModels": true,
+    "noteGuiMode": "browse",
+    "apiKey": "",
+    "downloadTimeout": 0,
+    "duplicateBehavior": "new",
+    "displayTagsAndFlags": "never",
+    "cardFormats": [
+      {
+        "name": "Expression",
+        "icon": "big-circle",
+        "deck": "YOUR_DECK",
+        "model": "YOUR_NOTE_TYPE",
+        "fields": {
+          "Expression": {
+            "value": "{expression}",
+            "overwriteMode": "coalesce"
+          },
+          "ExpressionFurigana": {
+            "value": "{furigana-plain}",
+            "overwriteMode": "coalesce"
+          },
+          "ExpressionReading": {
+            "value": "{reading}",
+            "overwriteMode": "coalesce"
+          },
+          "ExpressionAudio": {
+            "value": "{audio}",
+            "overwriteMode": "coalesce"
+          },
+          "SelectionText": {
+            "value": "{popup-selection-text}",
+            "overwriteMode": "coalesce"
+          },
+          "MainDefinition": {
+            "value": "{single-glossary-jitendexorg-2025-03-04}",
+            "overwriteMode": "coalesce"
+          },
+          "DefinitionPicture": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Sentence": {
+            "value": "{cloze-prefix}<b>{cloze-body}</b>{cloze-suffix}",
+            "overwriteMode": "coalesce"
+          },
+          "SentenceFurigana": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "SentenceAudio": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Picture": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Glossary": {
+            "value": "{glossary}",
+            "overwriteMode": "coalesce"
+          },
+          "Hint": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsWordAndSentenceCard": {
+            "value": "x",
+            "overwriteMode": "coalesce"
+          },
+          "IsClickCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsSentenceCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PitchPosition": {
+            "value": "{pitch-accent-positions}",
+            "overwriteMode": "coalesce"
+          },
+          "PitchCategories": {
+            "value": "{pitch-accent-categories}",
+            "overwriteMode": "coalesce"
+          },
+          "Frequency": {
+            "value": "{frequencies}",
+            "overwriteMode": "coalesce"
+          },
+          "FreqSort": {
+            "value": "{frequency-harmonic-rank}",
+            "overwriteMode": "coalesce"
+          },
+          "MiscInfo": {
+            "value": "{document-title}",
+            "overwriteMode": "coalesce"
+          }
+        },
+        "type": "term"
+      },
+      {
+        "name": "Reading",
+        "icon": "small-circle",
+        "deck": "YOUR_DECK",
+        "model": "YOUR_NOTE_TYPE",
+        "fields": {
+          "Expression": {
+            "value": "{reading}",
+            "overwriteMode": "coalesce"
+          },
+          "ExpressionFurigana": {
+            "value": "{furigana-plain}",
+            "overwriteMode": "coalesce"
+          },
+          "ExpressionReading": {
+            "value": "{reading}",
+            "overwriteMode": "coalesce"
+          },
+          "ExpressionAudio": {
+            "value": "{audio}",
+            "overwriteMode": "coalesce"
+          },
+          "SelectionText": {
+            "value": "{popup-selection-text}",
+            "overwriteMode": "coalesce"
+          },
+          "MainDefinition": {
+            "value": "{single-glossary-jitendexorg-2025-03-04}",
+            "overwriteMode": "coalesce"
+          },
+          "Sentence": {
+            "value": "{cloze-prefix}<b>{cloze-body}</b>{cloze-suffix}",
+            "overwriteMode": "coalesce"
+          },
+          "SentenceFurigana": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "SentenceAudio": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Picture": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Glossary": {
+            "value": "{glossary}",
+            "overwriteMode": "coalesce"
+          },
+          "Hint": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsWordAndSentenceCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsClickCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsSentenceCard": {
+            "value": "x",
+            "overwriteMode": "coalesce"
+          },
+          "PitchPosition": {
+            "value": "{pitch-accent-positions}",
+            "overwriteMode": "coalesce"
+          },
+          "PitchCategories": {
+            "value": "{pitch-accent-categories}",
+            "overwriteMode": "coalesce"
+          },
+          "Frequency": {
+            "value": "{frequencies}",
+            "overwriteMode": "coalesce"
+          },
+          "FreqSort": {
+            "value": "{frequency-harmonic-rank}",
+            "overwriteMode": "coalesce"
+          },
+          "MiscInfo": {
+            "value": "{document-title}",
+            "overwriteMode": "coalesce"
+          }
+        },
+        "type": "term"
+      },
+      {
+        "name": "Kanji",
+        "icon": "big-circle",
+        "deck": "YOUR_DECK",
+        "model": "YOUR_NOTE_TYPE",
+        "fields": {
+          "Key": {
+            "value": "{character}",
+            "overwriteMode": "coalesce"
+          },
+          "Word": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "WordReading": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PAOverride": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PAOverrideText": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "AJTWordPitch": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PrimaryDefinition": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PrimaryDefinitionPicture": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Sentence": {
+            "value": "{sentence}",
+            "overwriteMode": "coalesce"
+          },
+          "SentenceReading": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "AltDisplayWord": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "AltDisplaySentence": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "AltDisplayPASentenceCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "AltDisplayAudioCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "AdditionalNotes": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Hint": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "HintNotHidden": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsSentenceCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsTargetedSentenceCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsClickCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsHoverCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsHintCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsSentenceFirstCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "IsAudioCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PAShowInfo": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PATestOnlyWord": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PADoNotTest": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PASeparateWordCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PASeparateSentenceCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "SeparateAudioCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "SeparateSentenceAudioCard": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Picture": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "WordAudio": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "SentenceAudio": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PAGraphs": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PAPositions": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "FrequenciesStylized": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "FrequencySort": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "PASilence": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "WordReadingHiragana": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "YomichanWordTags": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "SecondaryDefinition": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "ExtraDefinitions": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "UtilityDictionaries": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "CardCache": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          },
+          "Comment": {
+            "value": "",
+            "overwriteMode": "coalesce"
+          }
+        },
+        "type": "kanji"
+      },
+      {
+        "name": "Format 4",
+        "type": "term",
+        "deck": "YOUR_DECK",
+        "model": "YOUR_NOTE_TYPE",
+        "fields": {},
+        "icon": "big-circle"
+      }
+    ],
+    "targetTags": [],
+    "forceSync": false,
+    "noteDupeCheckFirst": false
+  },
+  "yomitanServer": "http://127.0.0.1:19633",
+  "formatName": "Expression"
+}

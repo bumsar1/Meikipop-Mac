@@ -1,0 +1,16 @@
+Bygning på den samme Mac (kræver den eksisterende Python-installation og pakker):
+
+Åbn Terminal i denne app-build-mappe, og kør:
+
+xcrun swiftc -O -swift-version 5 -target arm64-apple-macosx13.0 ../native/GameAudio.swift -o ../native/GameAudio
+python3 prepare.py
+PYTHONPATH=.. python3 -m PyInstaller --noconfirm Meikipop.spec
+xattr -rd com.apple.FinderInfo dist/Meikipop.app
+xattr -rd com.apple.ResourceFork dist/Meikipop.app
+codesign --force --deep --sign - dist/Meikipop.app
+codesign --verify --deep --strict dist/Meikipop.app
+
+prepare.py bruger de eksisterende OCR-modeller i Hugging Face-cachen og samler tredjepartslicenser. Spec-filen medtager den lokale ordbog og mining-settings.json fra kildemappen. Der er ikke behov for at bygge igen for at bruge den leverede app.
+
+Pakketest uden vinduesoptagelse eller Anki-oprettelser:
+dist/Meikipop.app/Contents/MacOS/Meikipop --self-test /tmp/meikipop-self-test.json
