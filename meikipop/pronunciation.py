@@ -14,7 +14,7 @@ def fetch_pronunciation(expression, reading):
     for item in payload.get('audioMedia', []):
         if item.get('term') == expression and item.get('reading', '') == (reading or expression):
             return base64.b64decode(item['content'], validate=True), item['ankiFilename']
-    raise MiningError('Ingen udtale fundet i dine Yomitan-lydkilder.')
+    raise MiningError('No pronunciation found in your Yomitan audio sources.')
 
 
 class Pronunciation(QObject):
@@ -28,7 +28,7 @@ class Pronunciation(QObject):
         self.output.setVolume(0.1)
         self.player = QMediaPlayer(self)
         self.player.setAudioOutput(self.output)
-        self.player.errorOccurred.connect(lambda *args: self.message.emit('Lyden kunne ikke afspilles: ' + self.player.errorString()))
+        self.player.errorOccurred.connect(lambda *args: self.message.emit('Could not play audio: ' + self.player.errorString()))
         self.buffer = None
         self.generation = 0
         self.cache = OrderedDict()
@@ -79,7 +79,7 @@ class Pronunciation(QObject):
     def _failed(self, generation, message):
         self.loading = False
         if generation == self.generation:
-            self.message.emit('Udtale: ' + message)
+            self.message.emit('Pronunciation: ' + message)
         self._start_pending()
 
     def _play_bytes(self, data, name):

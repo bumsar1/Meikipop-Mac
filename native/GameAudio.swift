@@ -51,7 +51,7 @@ final class Capture: NSObject, SCStreamOutput, SCStreamDelegate {
         guard let application = content.applications.first(where: { $0.processID == pid }),
               let window = content.windows.first(where: { $0.windowID == windowID && $0.owningApplication?.processID == pid }),
               let display = content.displays.first(where: { $0.frame.intersects(window.frame) }) else {
-            fail("Det valgte spilvindue er ikke tilgængeligt. Vælg vinduet igen.")
+            fail("The selected game window is unavailable. Select it again.")
         }
         let filter = SCContentFilter(display: display, including: [application], exceptingWindows: [])
         let config = SCStreamConfiguration()

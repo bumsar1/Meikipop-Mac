@@ -236,7 +236,7 @@ class Popup(QWidget):
             return
         frame = getattr(entry, 'mining_window_frame', None)
         if frame is not None and frame.window_id != getattr(self.shared_state, 'capture_window_id', frame.window_id):
-            self.mining_status.setText("Vinduesvalget er ændret. Slip Shift og lav opslaget igen.")
+            self.mining_status.setText("The selected window has changed. Release Shift and look up the word again.")
             return
         # Freeze audio at click time, before Yomitan/network work can delay it.
         import copy
@@ -248,12 +248,12 @@ class Popup(QWidget):
             self.mining_status.setText(str(e))
             return
         self._mining_busy = True
-        self.mining_status.setText("Henter Yomitan-felter og tilføjer til Anki…")
+        self.mining_status.setText("Fetching Yomitan fields and adding to Anki…")
         def work():
             from meikipop.mining import Miner
             try:
                 note_id = Miner().add(entry)
-                self.mining_finished.emit(True, f"✓ Tilføjet til 日本語 · {entry.written_form}")
+                self.mining_finished.emit(True, f"✓ Added to 日本語 · {entry.written_form}")
                 logger.info("Anki note created: %s", note_id)
             except Exception as e:
                 logger.exception("Anki mining failed")

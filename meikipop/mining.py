@@ -38,7 +38,7 @@ def render_fields(templates, values):
     def replace(match):
         key = match.group(1)
         if key not in values:
-            raise MiningError('Yomitan returnerede ikke feltet: ' + key)
+            raise MiningError('Yomitan did not return the field: ' + key)
         return str(values[key])
     return {name: MARKER.sub(replace, spec['value']) for name, spec in templates.items()}
 
@@ -52,7 +52,7 @@ class Miner:
         for endpoint in [self.settings['yomitanServer'], self.anki_config['server']]:
             u = urlparse(endpoint)
             if u.scheme != 'http' or u.hostname not in ('127.0.0.1', 'localhost', '::1'):
-                raise MiningError('Forbindelsen skal være lokal på denne Mac.')
+                raise MiningError('The connection must be local to this Mac.')
 
     def post(self, url, data):
         try:
@@ -60,9 +60,9 @@ class Miner:
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
-            raise MiningError('Kan ikke forbinde. Hold Anki og Brave åbne, og slå Yomitan API til. ' + str(e)) from e
+            raise MiningError('Cannot connect. Keep Anki and Brave open, and enable Yomitan API. ' + str(e)) from e
         except ValueError as e:
-            raise MiningError('Forbindelsen returnerede ikke gyldig JSON.') from e
+            raise MiningError('The connection did not return valid JSON.') from e
 
     def anki(self, action, **params):
         request = {'action': action, 'version': 6, 'params': params}
@@ -79,14 +79,14 @@ class Miner:
     def prepare(self, entry):
         frame = getattr(entry, 'mining_window_frame', None)
         if frame is None:
-            raise MiningError('Vinduesbilledet mangler. ' + getattr(entry, 'mining_window_error', '') + ' Vælg vindue via menulinjen → Vælg vindue til Anki-billeder, og lav opslaget igen.')
+            raise MiningError('The window screenshot is missing. ' + getattr(entry, 'mining_window_error', '') + ' Select a window from the menu bar → Select Window for Anki Screenshots, then look up the word again.')
         image_name = 'meikipop_window_' + frame.digest + '.png'
 
         expected = next(f for f in self.anki_config['cardFormats'] if f['name'] == self.settings['formatName'])
         formats = self.yomitan('ankiCardFormats')
         live = next((f for f in formats if f['name'] == expected['name'] and f.get('type') == 'term'), None)
         if not live or any(live[k] != expected[k] for k in ('deck', 'model', 'fields')):
-            raise MiningError('Vælg profilen Bilingual i Yomitan. Hvis felterne er ændret, skal indstillingerne eksporteres igen.')
+            raise MiningError('Select the Bilingual profile in Yomitan. If the fields have changed, export the settings again.')
         templates = live['fields']
         requested = {m for f in templates.values() for m in MARKER.findall(f['value'])}
         local = {'cloze-prefix', 'cloze-body', 'cloze-suffix', 'sentence', 'document-title', 'popup-selection-text'}
@@ -94,7 +94,7 @@ class Miner:
         payload = self.yomitan('ankiFields', text=entry.written_form or entry.reading,
                               type='term', markers=markers, maxEntries=32, includeMedia=True)
         if not isinstance(payload, dict) or not isinstance(payload.get('fields'), list):
-            raise MiningError('Denne Yomitan-version returnerede et ukendt feltformat.')
+            raise MiningError('This Yomitan version returned an unknown field format.')
         selected = None
         for candidate in payload['fields']:
             expression = html.unescape(re.sub('<[^>]*>', '', candidate.get('expression', '')))
@@ -103,12 +103,12 @@ class Miner:
                 selected = dict(candidate)
                 break
         if selected is None:
-            raise MiningError('Yomitan fandt ikke præcis det valgte ord og den valgte læsning. Intet kort oprettet.')
+            raise MiningError('Yomitan did not find the exact selected word and reading. No card was created.')
         sentence = getattr(entry, 'mining_sentence', entry.written_form)
         offset = getattr(entry, 'mining_offset', 0)
         length = getattr(entry, 'mining_length', len(entry.written_form))
         if not (0 <= offset < len(sentence) and length > 0 and offset + length <= len(sentence)):
-            raise MiningError('Ordets placering i OCR-teksten kunne ikke bestemmes.')
+            raise MiningError('Could not determine the position of the word in the OCR text.')
         selected.update({'cloze-prefix': html.escape(sentence[:offset]),
                          'cloze-body': html.escape(sentence[offset:offset + length]),
                          'cloze-suffix': html.escape(sentence[offset + length:]),
@@ -116,31 +116,31 @@ class Miner:
                          'document-title': 'Meikipop', 'popup-selection-text': ''})
         fields = render_fields(templates, selected)
         if not fields.get('MainDefinition', '').strip():
-            raise MiningError('Yomitan gav ingen MainDefinition. Kontrollér at Jitendex er aktiveret.')
+            raise MiningError('Yomitan returned no MainDefinition. Check that Jitendex is enabled.')
         if 'Picture' not in fields:
-            raise MiningError('Korttypen mangler Picture-feltet.')
+            raise MiningError('The note type is missing the Picture field.')
         fields['Picture'] = '<img src="' + image_name + '">'
         sentence_audio = getattr(entry, 'mining_sentence_audio', None)
         if sentence_audio:
             if 'SentenceAudio' not in fields:
-                raise MiningError('Korttypen mangler SentenceAudio-feltet.')
+                raise MiningError('The note type is missing the SentenceAudio field.')
             audio_name = 'meikipop_sentence_' + hashlib.sha256(sentence_audio).hexdigest() + '.wav'
             fields['SentenceAudio'] = '[sound:' + audio_name + ']'
         actual = self.anki('modelFieldNames' , modelName=live['model'])
         if set(fields) - set(actual):
-            raise MiningError('Anki-korttypen mangler felter fra Yomitan-opsætningen.')
+            raise MiningError('The Anki note type is missing fields from the Yomitan configuration.')
         if live['deck'] not in self.anki('deckNames'):
-            raise MiningError('Det valgte Anki-deck findes ikke.')
+            raise MiningError('The selected Anki deck does not exist.')
         note = {'deckName': live['deck'], 'modelName': live['model'], 'fields': fields,
                 'tags': self.anki_config.get('tags', []),
                 'options': {'allowDuplicate': False, 'duplicateScope': self.anki_config.get('duplicateScope', 'collection')}}
         if not self.anki('canAddNotes', notes=[note])[0]:
-            raise MiningError('Kortet findes allerede, eller Anki afviser det. Intet kort oprettet.')
+            raise MiningError('The card already exists or Anki rejected it. No card was created.')
         rendered = '\n'.join(fields.values())
         media = [m for key in ('dictionaryMedia', 'audioMedia') for m in payload.get(key, [])
                  if m.get('ankiFilename') and m['ankiFilename'] in rendered]
         if '{audio}' in [f['value'] for f in templates.values()] and not fields.get('ExpressionAudio'):
-            raise MiningError('Yomitan fandt ingen lyd til ordet. Intet kort oprettet.')
+            raise MiningError('Yomitan found no audio for the word. No card was created.')
         media.append({"ankiFilename": image_name, "content": base64.b64encode(frame.png).decode("ascii")})
         if sentence_audio:
             media.append({'ankiFilename': audio_name, 'content': base64.b64encode(sentence_audio).decode('ascii')})
@@ -151,14 +151,14 @@ class Miner:
         for item in media:
             name = item['ankiFilename']
             if Path(name).name != name or not item.get('content'):
-                raise MiningError('Ugyldig mediefil fra Yomitan.')
+                raise MiningError('Invalid media file from Yomitan.')
             stored = self.anki('storeMediaFile', filename=name, data=item['content'])
             if stored != name:
-                raise MiningError('Anki ændrede mediefilnavnet; kortet blev ikke oprettet.')
+                raise MiningError('Anki changed the media filename; the card was not created.')
         try:
             note_id = self.anki('addNote', note=note)
         except MiningError as e:
-            raise MiningError('Tilføjelsen kunne ikke bekræftes. Kontrollér Anki før du prøver igen. ' + str(e)) from e
+            raise MiningError('Could not confirm the addition. Check Anki before trying again. ' + str(e)) from e
         if not isinstance(note_id, int):
-            raise MiningError('Anki bekræftede ikke kortets oprettelse.')
+            raise MiningError('Anki did not confirm that the card was created.')
         return note_id

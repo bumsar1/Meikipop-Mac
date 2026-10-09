@@ -21,7 +21,7 @@ class FrameParagraphs(list):
 def choose_window(windows, pid, region, own_pid=None):
     """CG lists windows front-to-back; reject other apps and unrelated regions."""
     if pid == (own_pid if own_pid is not None else os.getpid()):
-        raise RuntimeError('Aktivér spilvinduet før opslaget.')
+        raise RuntimeError('Activate the game window before looking up a word.')
     x,y,w,h = (region[k] for k in ('left','top','width','height'))
     for window in windows:
         if window.get('kCGWindowOwnerPID') != pid or window.get('kCGWindowLayer') != 0:
@@ -33,7 +33,7 @@ def choose_window(windows, pid, region, own_pid=None):
         overlap = max(0,min(x+w,bx+bw)-max(x,bx)) * max(0,min(y+h,by+bh)-max(y,by))
         if overlap >= 0.9*w*h:
             return window['kCGWindowNumber']
-    raise RuntimeError('OCR-området ligger ikke i det aktive vindue. Aktivér spillet eller vælg scanningsområdet igen.')
+    raise RuntimeError('The OCR region is outside the active window. Activate the game or select the scanning region again.')
 
 
 def encode_png(image):
@@ -42,10 +42,10 @@ def encode_png(image):
     data = NSMutableData.data()
     dest = Quartz.CGImageDestinationCreateWithData(data, 'public.png', 1, None)
     if dest is None:
-        raise RuntimeError('Kunne ikke klargøre vinduesbilledet.')
+        raise RuntimeError('Could not prepare the window screenshot.')
     Quartz.CGImageDestinationAddImage(dest, image, None)
     if not Quartz.CGImageDestinationFinalize(dest):
-        raise RuntimeError('Kunne ikke gemme vinduesbilledet som PNG.')
+        raise RuntimeError('Could not save the window screenshot as PNG.')
     return bytes(data)
 
 
@@ -73,18 +73,18 @@ def list_windows():
 def capture_window(window_id, expected_pid=None):
     import Quartz
     if window_id is None:
-        raise RuntimeError('Vælg et vindue via menulinjen → Vælg vindue til Anki-billeder.')
+        raise RuntimeError('Select a window from the menu bar → Select Window for Anki Screenshots.')
     windows = Quartz.CGWindowListCopyWindowInfo(
         Quartz.kCGWindowListOptionIncludingWindow, int(window_id))
     match = next((w for w in windows or [] if int(w.get('kCGWindowNumber', -1)) == int(window_id)), None)
     if match is None or (expected_pid is not None and match.get('kCGWindowOwnerPID') != expected_pid):
-        raise RuntimeError('Det valgte vindue er lukket. Vælg spilvinduet igen via menulinjen.')
+        raise RuntimeError('The selected window is closed. Select the game window again from the menu bar.')
     if not match.get('kCGWindowIsOnscreen', True):
-        raise RuntimeError('Det valgte vindue er minimeret eller på et andet skrivebord. Vis det, og prøv igen.')
+        raise RuntimeError('The selected window is minimized or on another desktop. Show it and try again.')
     image = Quartz.CGWindowListCreateImage(
         Quartz.CGRectNull, Quartz.kCGWindowListOptionIncludingWindow, int(window_id),
         Quartz.kCGWindowImageBoundsIgnoreFraming | Quartz.kCGWindowImageBestResolution)
     if image is None or Quartz.CGImageGetWidth(image) == 0:
-        raise RuntimeError('macOS kunne ikke tage vinduesbilledet. Kontrollér skærmoptagelsestilladelsen til Terminal, og genstart Meikipop.')
+        raise RuntimeError('macOS could not capture the window. Check Screen Recording permission for Meikipop (or Terminal when using the script), then restart Meikipop.')
     png = encode_png(image)
     return WindowFrame(png, hashlib.sha256(png).hexdigest(), int(window_id))

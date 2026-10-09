@@ -10,7 +10,7 @@ GETTING STARTED
 7. Release Shift to hide the popup and stop pronunciation playback.
 
 The app remains in the menu bar. Use Quit to exit, Pause meikipop to pause scanning and game audio, or the window selection action to choose a different game.
-Some controls in this release are still labeled in Danish; these instructions describe their functions.
+App controls and messages are in English.
 
 ANKI FIELDS
 The existing private release creates an Expression card in the 日本語 deck using the Lapis note type. Yomitan supplies definitions, furigana, readings, word audio, pitch accent, and frequencies using the exported field mapping.
@@ -25,7 +25,7 @@ The selected window is used explicitly, regardless of which application has keyb
 The screenshot belongs to the specific OCR lookup and is taken before the popup appears. If the window closes or is minimized, capture reports an error; it does not substitute another window or the desktop. Temporary images stay in memory; images attached to cards are stored in Anki's media collection.
 
 OPTIONAL GAME AUDIO
-Enable sentence audio through the game audio submenu before the game reads the line.
+Choose Game Audio for Anki → Include Game Audio in SentenceAudio before the game reads the line.
 Choose the last 5, 10, 15 (default), or 30 seconds. Wait for the line to finish, then click the word or + Anki. The clip ends at click time and is stored as WAV in SentenceAudio. ExpressionAudio keeps Yomitan's word pronunciation.
 
 Audio capture is off at every launch. It captures the application that owns the selected window, including any music and effects. It does not isolate voices or detect sentence boundaries. The microphone is not used.

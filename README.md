@@ -17,7 +17,7 @@ The release includes Python, local OCR models, a dictionary, and the existing pe
 3. Keep holding Shift and click the word or **+ Anki** to add a card.
 4. Optional: open the game audio submenu in the menu bar and enable sentence audio. Select 5, 10, 15, or 30 seconds. Wait for the spoken line to finish before adding the word.
 
-Some controls in the current app are still labeled in Danish. See [USAGE.txt](USAGE.txt) for additional details.
+The app interface is in English. See [USAGE.txt](USAGE.txt) for additional details.
 
 Game audio is off at every launch. It captures audio from the selected game's application, including music and effects; it does not automatically detect sentence boundaries. The microphone is not used. The buffer stays in memory and is cleared when capture stops, the app pauses, or the selected window changes. Added clips go into `SentenceAudio`; Yomitan's word pronunciation stays in `ExpressionAudio`.
 

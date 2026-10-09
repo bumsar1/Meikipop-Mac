@@ -21,7 +21,7 @@ try:
     def bundled_model(repo_id, filename):
         path = bundle / 'models' / filename
         if not path.is_file():
-            raise RuntimeError(f'OCR-modellen mangler i appen: {filename}')
+            raise RuntimeError(f'The OCR model is missing from the app: {filename}')
         return str(path)
     engine._get_model_path = bundled_model
     from meikipop.utils.paths import paths
@@ -81,5 +81,5 @@ except Exception:
     if not self_test:
         from PyQt6.QtWidgets import QApplication, QMessageBox
         app = QApplication.instance() or QApplication([])
-        QMessageBox.critical(None, 'Meikipop kunne ikke starte', f'Der opstod en fejl. Fejlloggen ligger her:\n{log}\n\n{traceback.format_exc()[-1200:]}')
+        QMessageBox.critical(None, 'Meikipop could not start', f'An error occurred. The log file is here:\n{log}\n\n{traceback.format_exc()[-1200:]}')
     raise

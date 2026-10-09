@@ -38,23 +38,23 @@ class TrayIcon(QSystemTrayIcon):
 
         self.menu = QMenu()
 
-        self.menu.addAction("Vælg vindue til Anki-billeder…").triggered.connect(self.select_capture_window)
+        self.menu.addAction("Select Window for Anki Screenshots…").triggered.connect(self.select_capture_window)
 
         self.audio = screen_manager.shared_state.game_audio
-        audio_menu = self.menu.addMenu("Spillyd til Anki")
-        self.audio_action = audio_menu.addAction("Medtag spillyd i SentenceAudio")
+        audio_menu = self.menu.addMenu("Game Audio for Anki")
+        self.audio_action = audio_menu.addAction("Include Game Audio in SentenceAudio")
         self.audio_action.setCheckable(True)
         self.audio_action.triggered.connect(self.toggle_game_audio)
         self.audio_lengths = QActionGroup(self)
         self.audio_lengths.setExclusive(True)
         for seconds in (5, 10, 15, 30):
-            action = audio_menu.addAction(f"Seneste {seconds} sekunder")
+            action = audio_menu.addAction(f"Last {seconds} seconds")
             action.setCheckable(True)
             action.setChecked(seconds == self.audio.seconds)
             action.setData(seconds)
             self.audio_lengths.addAction(action)
         self.audio_lengths.triggered.connect(lambda a: setattr(self.audio, 'seconds', a.data()))
-        self.audio_status = audio_menu.addAction("Slået fra")
+        self.audio_status = audio_menu.addAction("Off")
         self.audio_status.setEnabled(False)
         self.audio_timer = QTimer(self)
         self.audio_timer.timeout.connect(lambda: self.audio_status.setText(self.audio.status()))
