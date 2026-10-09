@@ -4,7 +4,7 @@ Privat backup af en tilpasset Meikipop 2.0.5 til Apple Silicon: japansk OCR, Shi
 
 ## Hent appen
 
-Hent **Meikipop-Mac-med-spillyd.zip** fra [Releases](https://github.com/bumsar1/Meikipop-Mac/releases/latest), pak den ud, og flyt Meikipop.app til Programmer. Afslut den gamle app før udskiftning.
+Hent **Meikipop-macOS.zip** fra [Releases](https://github.com/bumsar1/Meikipop-Mac/releases/latest), pak den ud, og flyt Meikipop.app til Programmer. Afslut den gamle app før udskiftning.
 
 Appen kører i menulinjen. Vælg **Quit** for at afslutte eller **Pause meikipop** for at stoppe scanning og lyd midlertidigt. macOS kan bede om tilladelse til skærm-/lydoptagelse og Tilgængelighed.
 
