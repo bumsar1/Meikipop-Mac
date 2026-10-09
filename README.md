@@ -21,6 +21,12 @@ The app interface is in English. See [USAGE.txt](USAGE.txt) for additional detai
 
 Game audio is off at every launch. It captures audio from the selected game's application, including music and effects; it does not automatically detect sentence boundaries. The microphone is not used. The buffer stays in memory and is cleared when capture stops, the app pauses, or the selected window changes. Added clips go into `SentenceAudio`; Yomitan's word pronunciation stays in `ExpressionAudio`.
 
+## Existing words in Anki
+
+Each word shows **Checking Anki…**, **✓ Already in Anki**, or **＋ Anki**. Existing words have no add link, while pronunciation playback remains available. The check matches the complete expression in the configured deck (including subdecks), using the dictionary headword for inflected text. It does not search the whole sentence or compare readings.
+
+Checks run in the background and are cached for up to five seconds. A successful addition updates the indicator immediately. **Anki unavailable · retry** means the status could not be verified. A fresh check before adding, plus Anki's existing duplicate validation, prevents stale status from being the only protection. Keep Anki and AnkiConnect running.
+
 ## Source and building
 
 The source does not include the personal configuration. Copy `mining-settings.example.json` to `mining-settings.json` and adapt it to your Yomitan export. The card format name, type, deck, model, and fields must match the active profile exactly; the example values are placeholders. Some app messages still reference the original Bilingual profile.

@@ -1,4 +1,4 @@
-English interface update: app menus, buttons, status messages, errors, and permission descriptions are now in English. Existing features and the private Anki configuration are preserved.
+New: existing-word indicators in the popup. Words already in the configured Anki deck show **✓ Already in Anki** and cannot be added from the popup. Checks run in the background, successful additions update immediately, and unavailable Anki connections are shown explicitly. A fresh check also runs before adding.
 
 Private backup of Meikipop for Apple Silicon Macs.
 

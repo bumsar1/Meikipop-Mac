@@ -56,7 +56,7 @@ class Miner:
 
     def post(self, url, data):
         try:
-            response = self.session.post(url, json=data, timeout=(3, 90))
+            response = self.session.post(url, json=data, timeout=getattr(self, 'timeout', (3, 90)))
             response.raise_for_status()
             return response.json()
         except requests.RequestException as e:
@@ -75,6 +75,23 @@ class Miner:
 
     def yomitan(self, action, **params):
         return self.post(self.settings['yomitanServer'].rstrip('/') + '/' + action, params)
+
+    def word_exists(self, word):
+        card = next(f for f in self.anki_config['cardFormats'] if f['name'] == self.settings['formatName'])
+        fields = [name for name, spec in card['fields'].items() if spec['value'] == '{expression}']
+        if len(fields) != 1 or not word:
+            raise MiningError('Cannot determine the expression field for Anki checks.')
+        def quote(value):
+            # Escape Anki search syntax; field searches match the complete value.
+            value = value.replace(chr(92), chr(92) * 2)
+            for char in ('"', '*', '_'):
+                value = value.replace(char, chr(92) + char)
+            return '"' + value + '"'
+        query = quote('deck:' + card['deck']) + ' ' + quote(fields[0] + ':' + word)
+        result = self.anki('findNotes', query=query)
+        if not isinstance(result, list):
+            raise MiningError('Anki returned an invalid presence result.')
+        return bool(result)
 
     def prepare(self, entry):
         frame = getattr(entry, 'mining_window_frame', None)
@@ -147,6 +164,8 @@ class Miner:
         return note, media
 
     def add(self, entry):
+        if self.word_exists(entry.written_form or entry.reading):
+            raise MiningError('Already in your Anki deck. No card was created.')
         note, media = self.prepare(entry)
         for item in media:
             name = item['ankiFilename']

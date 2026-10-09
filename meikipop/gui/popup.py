@@ -77,10 +77,17 @@ class Popup(QWidget):
         self.pronunciation = Pronunciation(self)
         self.pronunciation.message.connect(lambda text: self.mining_status.setText(text))
         self._pronunciation_key = None
+        from meikipop.anki_status import AnkiStatus
+        self.anki_status = AnkiStatus(self)
+        self.anki_status.updated.connect(self._refresh_anki_status)
+        self._mining_word = None
+        self.anki_timer = QTimer(self)
+        self.anki_timer.timeout.connect(self._check_anki_status)
+        self.anki_timer.start(1000)
         self._mining_entries = []
         self._mining_busy = False
         self._mining_grace = 0.0
-        self.mining_status = QLabel("Hold Shift · ＋ Anki gemmer · ▶ gentager udtalen")
+        self.mining_status = QLabel("Hold Shift · ＋ Anki adds · ▶ replays pronunciation")
         self.mining_status.setWordWrap(True)
         self.mining_status.setStyleSheet("color: #aaaaaa; font-size: 12px;")
         self.content_layout.addWidget(self.mining_status)
@@ -194,17 +201,20 @@ class Popup(QWidget):
         latest = self.get_latest_data()
         if latest and active:
             self._mining_grace = time.monotonic() + 1.2
+            needs_check = latest != self._last_latest_data or not self.is_visible
             if latest != self._last_latest_data:
                 full_html, new_size = self._calculate_content_and_size_char_count(latest)
                 self.display_label.setText(full_html)
                 new_size.setHeight(new_size.height() + 48)
                 self.setFixedSize(new_size)
-                self.mining_status.setText("Hold Shift · ＋ Anki gemmer · ▶ gentager udtalen")
+                self.mining_status.setText("Hold Shift · ＋ Anki adds · ▶ replays pronunciation")
             self._mining_entries = latest
             self._last_latest_data = latest
             if not self.is_visible:
                 self.move_to(pos.x(), pos.y())
             self.show_popup()
+            if needs_check:
+                self._check_anki_status()
             entry = next((e for e in latest if isinstance(e, DictionaryEntry)), None)
             if entry is not None:
                 key = (entry.written_form, entry.reading)
@@ -215,6 +225,20 @@ class Popup(QWidget):
             self.hide_popup()
             self.pronunciation.stop()
             self._pronunciation_key = None
+
+    def _check_anki_status(self):
+        if not self.is_visible or self._mining_busy:
+            return
+        self.anki_status.request([e.written_form or e.reading for e in self._mining_entries if isinstance(e, DictionaryEntry)])
+        self._refresh_anki_status()
+
+    def _refresh_anki_status(self):
+        if not self.is_calibrated or not self._mining_entries:
+            return
+        content, size = self._calculate_content_and_size_char_count(self._mining_entries)
+        self.display_label.setText(content)
+        size.setHeight(size.height() + 48)
+        self.setFixedSize(size)
 
     def _mine_clicked(self, link):
         if link.startswith('audio:'):
@@ -234,6 +258,14 @@ class Popup(QWidget):
                 return
         except (ValueError, IndexError):
             return
+        state = self.anki_status.state(entry.written_form or entry.reading)
+        if state == 'present':
+            self.mining_status.setText("Already in your Anki deck.")
+            return
+        if state == 'checking':
+            self.mining_status.setText("Checking Anki… Please wait.")
+            self._check_anki_status()
+            return
         frame = getattr(entry, 'mining_window_frame', None)
         if frame is not None and frame.window_id != getattr(self.shared_state, 'capture_window_id', frame.window_id):
             self.mining_status.setText("The selected window has changed. Release Shift and look up the word again.")
@@ -247,6 +279,7 @@ class Popup(QWidget):
         except RuntimeError as e:
             self.mining_status.setText(str(e))
             return
+        self._mining_word = entry.written_form or entry.reading
         self._mining_busy = True
         self.mining_status.setText("Fetching Yomitan fields and adding to Anki…")
         def work():
@@ -261,6 +294,8 @@ class Popup(QWidget):
         threading.Thread(target=work, name='AnkiMining', daemon=True).start()
 
     def _mine_finished(self, success, message):
+        if success and self._mining_word:
+            self.anki_status.mark_added(self._mining_word)
         self._mining_busy = False
         self._mining_grace = time.monotonic() + 6.0
         self.mining_status.setText(message)
@@ -343,13 +378,21 @@ class Popup(QWidget):
                 all_html_parts.append(self._render_kanji_entry(entry))
                 continue
 
-            header_text_calc = entry.written_form + " ＋ Anki ▶"
+            header_text_calc = entry.written_form + " ✓ Already in Anki ▶"
             if entry.reading: header_text_calc += f" [{entry.reading}]"
             header_ratio = len(header_text_calc) / self.header_chars_per_line
             max_ratio = max(max_ratio, header_ratio)
 
             # --- HTML construction ---
-            header_html = f'<a href="mine:{i}" style="text-decoration:none; color: {config.color_highlight_word}; font-size:{config.font_size_header}px;">{html.escape(entry.written_form)}</a> <a href="mine:{i}" style="color: {config.color_highlight_reading}; font-size:14px;">＋ Anki</a> <a href="audio:{i}" style="color: {config.color_highlight_reading}; font-size:14px;">▶</a>'
+            state = self.anki_status.state(entry.written_form or entry.reading)
+            badge = {'present': '✓ Already in Anki', 'checking': 'Checking Anki…',
+                     'unknown': 'Anki unavailable · retry', 'absent': '＋ Anki'}[state]
+            word = html.escape(entry.written_form)
+            if state in ('present', 'checking'):
+                header_html = f'<span style="color:{config.color_highlight_word};font-size:{config.font_size_header}px;">{word}</span> <span style="color:#aaaaaa;font-size:14px;">{badge}</span>'
+            else:
+                header_html = f'<a href="mine:{i}" style="color:{config.color_highlight_word};font-size:{config.font_size_header}px;">{word}</a> <a href="mine:{i}" style="color:{config.color_highlight_reading};font-size:14px;">{badge}</a>'
+            header_html += f' <a href="audio:{i}" style="color:{config.color_highlight_reading};font-size:14px;">▶</a>'
             if entry.reading: header_html += f' <span style="color: {config.color_highlight_reading}; font-size:{config.font_size_header - 2}px;">[{entry.reading}]</span>'
             if entry.deconjugation_process and config.show_deconjugation:
                 deconj_str = " ← ".join(p for p in entry.deconjugation_process if p)
