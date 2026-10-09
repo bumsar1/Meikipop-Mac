@@ -1,9 +1,9 @@
 # meikipop/gui/tray.py
 import os
 
-from PyQt6.QtCore import QTimer
+from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QIcon, QAction, QActionGroup
-from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication
+from PyQt6.QtWidgets import QSystemTrayIcon, QMenu, QApplication, QDialog, QVBoxLayout, QLabel, QSlider, QDialogButtonBox, QMessageBox
 
 from meikipop.config.config import APP_NAME, config, IS_WINDOWS
 from meikipop.gui.settings_dialog import SettingsDialog
@@ -59,6 +59,8 @@ class TrayIcon(QSystemTrayIcon):
         self.audio_timer = QTimer(self)
         self.audio_timer.timeout.connect(lambda: self.audio_status.setText(self.audio.status()))
         self.audio_timer.start(1000)
+
+        self.menu.addAction("Pronunciation Volume…").triggered.connect(self.show_pronunciation_volume)
 
         # Settings Action
         self.menu.addAction("Settings").triggered.connect(self.show_settings)
@@ -134,6 +136,35 @@ class TrayIcon(QSystemTrayIcon):
         self.prevent_ghost_icon_on_win()
 
         self.show()
+
+    def show_pronunciation_volume(self):
+        dialog = QDialog()
+        dialog.setWindowTitle("Pronunciation Volume")
+        dialog.setMinimumWidth(340)
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(QLabel("Adjust word pronunciation playback volume."))
+        value = QLabel()
+        layout.addWidget(value)
+        slider = QSlider(Qt.Orientation.Horizontal)
+        slider.setRange(0, 100)
+        slider.setAccessibleName("Pronunciation volume")
+        slider.setValue(self.popup_window.pronunciation.volume_percent)
+        value.setText(f"{slider.value()}%" + (" (Muted)" if slider.value() == 0 else ""))
+        layout.addWidget(slider)
+        def changed(percent):
+            self.popup_window.pronunciation.set_volume(percent)
+            value.setText(f"{percent}%" + (" (Muted)" if percent == 0 else ""))
+        slider.valueChanged.connect(changed)
+        buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Close)
+        buttons.rejected.connect(dialog.reject)
+        layout.addWidget(buttons)
+        initial = slider.value()
+        dialog.exec()
+        if slider.value() != initial:
+            try:
+                config.save()
+            except OSError as error:
+                QMessageBox.warning(None, "Could Not Save Volume", f"The volume changed for this session, but could not be saved: {error}")
 
     def toggle_game_audio(self, checked):
         self.audio.enabled = checked

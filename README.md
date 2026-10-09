@@ -4,7 +4,7 @@ A private backup of a customized Meikipop 2.0.5 for Apple Silicon, with Japanese
 
 ## Download
 
-Download **Meikipop-macOS.zip** from [Releases](https://github.com/bumsar1/Meikipop-Mac/releases/latest), extract it, and move **Meikipop.app** to Applications. Quit the previous version before replacing it.
+Download **Meikipop-macOS.dmg** from [Releases](https://github.com/bumsar1/Meikipop-Mac/releases/latest), open it, and drag **Meikipop.app** onto the **Applications** shortcut. Eject the disk image and launch Meikipop from Applications. Quit the previous version before replacing it.
 
 The app runs in the menu bar. Choose **Quit** to exit or **Pause meikipop** to pause scanning and audio capture. macOS may request screen/audio recording and Accessibility permissions.
 
@@ -20,6 +20,10 @@ The release includes Python, local OCR models, a dictionary, and the existing pe
 The app interface is in English. See [USAGE.txt](USAGE.txt) for additional details.
 
 Game audio is off at every launch. It captures audio from the selected game's application, including music and effects; it does not automatically detect sentence boundaries. The microphone is not used. The buffer stays in memory and is cleared when capture stops, the app pauses, or the selected window changes. Added clips go into `SentenceAudio`; Yomitan's word pronunciation stays in `ExpressionAudio`.
+
+## Pronunciation volume
+
+Choose **Pronunciation Volume…** from the menu bar to adjust word pronunciation from 0% (muted) to 100%. The default is 50%, increased from the previous fixed 10%. Changes apply immediately and are saved when the dialog closes. This adjusts playback in Meikipop; it does not rewrite audio attached to Anki cards or change the game audio buffer.
 
 ## Existing words in Anki
 

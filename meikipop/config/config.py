@@ -30,6 +30,7 @@ class Config:
     _SCHEMA = {
         'Settings': {
             'hotkey': 'shift',
+            'pronunciation_volume': 50,
             'scan_region': 'region',
             'max_lookup_length': 25,
             'glens_low_bandwidth': False,

@@ -5,6 +5,7 @@ from collections import OrderedDict
 from PyQt6.QtCore import QObject, pyqtSignal, QBuffer, QByteArray, QIODevice, QUrl
 from PyQt6.QtMultimedia import QAudioOutput, QMediaPlayer
 from meikipop.mining import Miner, MiningError
+from meikipop.config.config import config
 
 
 def fetch_pronunciation(expression, reading):
@@ -25,7 +26,7 @@ class Pronunciation(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.output = QAudioOutput(self)
-        self.output.setVolume(0.1)
+        self.set_volume(config.pronunciation_volume)
         self.player = QMediaPlayer(self)
         self.player.setAudioOutput(self.output)
         self.player.errorOccurred.connect(lambda *args: self.message.emit('Could not play audio: ' + self.player.errorString()))
@@ -36,6 +37,11 @@ class Pronunciation(QObject):
         self.loading = False
         self.ready.connect(self._ready)
         self.failed.connect(self._failed)
+
+    def set_volume(self, percent):
+        self.volume_percent = max(0, min(100, int(percent)))
+        config.pronunciation_volume = self.volume_percent
+        self.output.setVolume(self.volume_percent / 100.0)
 
     def stop(self):
         self.generation += 1

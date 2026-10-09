@@ -1,11 +1,9 @@
-New: existing-word indicators in the popup. Words already in the configured Anki deck show **✓ Already in Anki** and cannot be added from the popup. Checks run in the background, successful additions update immediately, and unavailable Anki connections are shown explicitly. A fresh check also runs before adding.
+New: **Pronunciation Volume…** in the menu bar, with a 0–100% slider and a saved preference. The default word playback volume is now 50%, up from the previous fixed 10%.
 
-Private backup of Meikipop for Apple Silicon Macs.
+Download **Meikipop-macOS.dmg**, open it, and drag **Meikipop.app** onto **Applications**. Eject the disk image and launch the app from Applications. Quit the previous version before replacing it. The app runs in the menu bar; choose **Quit** to exit.
 
-Download **Meikipop-macOS.zip**, extract it, and move **Meikipop.app** to Applications. The app runs in the menu bar; choose **Quit** to exit. See **Meikipop-START-HERE.txt** for setup and usage instructions.
+Includes the English interface, Anki word indicators, Shift lookups, Yomitan pronunciation, Anki field mapping, window screenshots, and optional game audio. Game audio remains off at launch.
 
-Includes Shift lookups, Yomitan pronunciation, Anki field mapping, window screenshots, and an optional 5–30 second game audio buffer. Game audio is off at launch. Enable it in the game audio submenu to fill `SentenceAudio`; Yomitan's word pronunciation remains in `ExpressionAudio`.
+The private Anki configuration is retained. Anki, AnkiConnect, Yomitan, and the local Yomitan API component are still required. The app is not Apple-notarized.
 
-The release retains the existing private Anki configuration. Anki, AnkiConnect, Yomitan, and the local Yomitan API component are still required. The app interface, messages, and permission descriptions are in English. The app is not Apple-notarized.
-
-The packaged self-test and synthetic audio tests passed. Recording from a real game with macOS permissions still needs testing on your Mac.
+Volume controls, mute, saved settings, and the packaged OCR/dictionary/audio self-test were verified. See Meikipop-START-HERE.txt for usage instructions.
