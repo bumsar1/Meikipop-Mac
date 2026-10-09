@@ -1,38 +1,40 @@
-# Meikipop til Mac
+# Meikipop for macOS
 
-Privat backup af en tilpasset Meikipop 2.0.5 til Apple Silicon: japansk OCR, Shift-opslag, Yomitan/Anki, vinduesbilleder og valgfri spillyd.
+A private backup of a customized Meikipop 2.0.5 for Apple Silicon, with Japanese OCR, Shift lookups, Yomitan/Anki integration, window screenshots, and optional game audio.
 
-## Hent appen
+## Download
 
-Hent **Meikipop-macOS.zip** fra [Releases](https://github.com/bumsar1/Meikipop-Mac/releases/latest), pak den ud, og flyt Meikipop.app til Programmer. Afslut den gamle app før udskiftning.
+Download **Meikipop-macOS.zip** from [Releases](https://github.com/bumsar1/Meikipop-Mac/releases/latest), extract it, and move **Meikipop.app** to Applications. Quit the previous version before replacing it.
 
-Appen kører i menulinjen. Vælg **Quit** for at afslutte eller **Pause meikipop** for at stoppe scanning og lyd midlertidigt. macOS kan bede om tilladelse til skærm-/lydoptagelse og Tilgængelighed.
+The app runs in the menu bar. Choose **Quit** to exit or **Pause meikipop** to pause scanning and audio capture. macOS may request screen/audio recording and Accessibility permissions.
 
-Release-appen indeholder Python, lokale OCR-modeller, ordbog og den eksisterende personlige Anki-feltmapping. Den er en privat backup til den oprindelige Mac-opsætning, ikke en generel installer. Anki med AnkiConnect og browseren med Yomitan API skal stadig være åbne. Den separat installerede Yomitan API-komponent bruger den eksisterende Python-installation; den installeres ikke af appen.
+The release includes Python, local OCR models, a dictionary, and the existing personal Anki field mapping. It is a private backup for the original Mac setup, not a general-purpose installer. Keep Anki with AnkiConnect and the browser with Yomitan API open. The separately installed Yomitan API component still uses the existing Python installation; this app does not install that component.
 
-## Brug
+## Usage
 
-1. Vælg spilvinduet, kontrollér prøvebilledet, og markér tekstområdet.
-2. Hold Shift over et ord for opslag og udtale.
-3. Hold fortsat Shift, og klik på ordet eller **+ Anki** for at tilføje.
-4. Valgfrit: aktivér **Spillyd til Anki → Medtag spillyd i SentenceAudio**. Vælg 5, 10, 15 eller 30 sekunder. Lad replikken afslutte, før du tilføjer ordet.
+1. Select the game window, check the screenshot preview, and select the text region.
+2. Hold **Shift** over a word to look it up and hear its pronunciation.
+3. Keep holding Shift and click the word or **+ Anki** to add a card.
+4. Optional: open the game audio submenu in the menu bar and enable sentence audio. Select 5, 10, 15, or 30 seconds. Wait for the spoken line to finish before adding the word.
 
-Spillyd er slået fra ved hver opstart. Bufferen omfatter programmets lyd, også musik og effekter; der er ingen automatisk sætningsafgrænsning. Mikrofonen bruges ikke. Bufferen holdes i hukommelsen og tømmes ved stop, pause og vinduesskift. Ved tilføjelse gemmes klippet i `SentenceAudio`; Yomitans ordudtale bliver i `ExpressionAudio`.
+Some controls in the current app are still labeled in Danish. See [USAGE.txt](USAGE.txt) for additional details.
 
-## Kilde og bygning
+Game audio is off at every launch. It captures audio from the selected game's application, including music and effects; it does not automatically detect sentence boundaries. The microphone is not used. The buffer stays in memory and is cleared when capture stops, the app pauses, or the selected window changes. Added clips go into `SentenceAudio`; Yomitan's word pronunciation stays in `ExpressionAudio`.
 
-Kildekoden indeholder ikke den personlige konfiguration. Kopiér `mining-settings.example.json` til `mining-settings.json`, og tilpas den til Yomitan-eksporten. Kortformatets navn, type, deck, model og felter skal svare præcis til den aktive profil; eksempelværdierne er ikke en færdig opsætning. Nogle brugerbeskeder nævner fortsat den oprindelige Bilingual-profil.
+## Source and building
 
-Installer `requirements.txt` i Python 3.13 på en Apple Silicon-Mac, og følg `app-build/BUILD.txt`. Xcode Command Line Tools kræves for Swift-lydhjælperen. Bygningen kræver en lokal Meikipop-ordbog og downloadede MeikiOCR-modeller. Bygningen medtager disse og den lokale konfiguration i appen.
+The source does not include the personal configuration. Copy `mining-settings.example.json` to `mining-settings.json` and adapt it to your Yomitan export. The card format name, type, deck, model, and fields must match the active profile exactly; the example values are placeholders. Some app messages still reference the original Bilingual profile.
 
-Appen er lokalt ad hoc-signeret, ikke Apple-notariseret. Fejllog: `~/Library/Logs/Meikipop/app.log`.
+Install `requirements.txt` with Python 3.13 on an Apple Silicon Mac and follow [app-build/BUILD.txt](app-build/BUILD.txt). Xcode Command Line Tools are required to compile the Swift audio helper. Building requires an existing local Meikipop dictionary and downloaded MeikiOCR models. These and the local configuration are included in the resulting app.
 
-## Validering
+The app is locally ad hoc-signed, not Apple-notarized. Log file: `~/Library/Logs/Meikipop/app.log`.
 
-Pakket OCR-/ordbogstest, lydhjælperens syntetiske PCM-test, buffergrænser, menubetjening og simuleret Anki-medietilføjelse er bestået. Optagelsen fra et rigtigt spil med appens macOS-tilladelser skal stadig afprøves. Ingen testkort blev oprettet i Anki.
+## Validation
 
-## Oprindelse og licens
+The packaged OCR/dictionary test, the audio helper's synthetic PCM test, buffer limits, menu controls, and simulated Anki media uploads passed. Recording from a real game with the app's macOS permissions still needs to be tested. No test cards were created in Anki.
 
-Baseret på [rtr46/meikipop](https://github.com/rtr46/meikipop), version 2.0.5, GPL-3.0; se [LICENSE](LICENSE). Denne variant er ikke en officiel upstream-release. Tredjepartslicenser findes også i appens `Contents/Resources/licenses`. Yomitan API: https://github.com/yomidevs/yomitan-api.
+## Credits and license
 
-Tilpasninger: Yomitan/Anki-felter og medier, Shift-adfærd, udtale, eksplicit vinduesvalg, macOS-appbygning og ScreenCaptureKit-lydbuffer.
+Based on [rtr46/meikipop](https://github.com/rtr46/meikipop), version 2.0.5, under GPL-3.0; see [LICENSE](LICENSE). This variant is not an official upstream release. Third-party licenses are also included in the app under `Contents/Resources/licenses`. [Yomitan API](https://github.com/yomidevs/yomitan-api) provides the local integration.
+
+Customizations include Yomitan/Anki fields and media, Shift behavior, pronunciation playback, explicit window selection, macOS packaging, and a ScreenCaptureKit audio buffer.

@@ -1,6 +1,8 @@
-Bygning på den samme Mac (kræver den eksisterende Python-installation og pakker):
+BUILDING ON THE ORIGINAL MAC
 
-Åbn Terminal i denne app-build-mappe, og kør:
+Requires the existing Python installation and dependencies, Xcode Command Line Tools, a local Meikipop dictionary, downloaded MeikiOCR models, and a configured mining-settings.json in the source root.
+
+Open Terminal in this app-build directory and run:
 
 xcrun swiftc -O -swift-version 5 -target arm64-apple-macosx13.0 ../native/GameAudio.swift -o ../native/GameAudio
 python3 prepare.py
@@ -10,7 +12,7 @@ xattr -rd com.apple.ResourceFork dist/Meikipop.app
 codesign --force --deep --sign - dist/Meikipop.app
 codesign --verify --deep --strict dist/Meikipop.app
 
-prepare.py bruger de eksisterende OCR-modeller i Hugging Face-cachen og samler tredjepartslicenser. Spec-filen medtager den lokale ordbog og mining-settings.json fra kildemappen. Der er ikke behov for at bygge igen for at bruge den leverede app.
+prepare.py uses the existing OCR models in the Hugging Face cache and collects third-party licenses. The spec includes the local dictionary and mining-settings.json. You do not need to rebuild to use the release app.
 
-Pakketest uden vinduesoptagelse eller Anki-oprettelser:
+Packaged self-test without capturing windows or creating Anki notes:
 dist/Meikipop.app/Contents/MacOS/Meikipop --self-test /tmp/meikipop-self-test.json

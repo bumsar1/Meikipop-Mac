@@ -1,9 +1,9 @@
-Privat backup af Meikipop til Apple Silicon (macOS).
+Private backup of Meikipop for Apple Silicon Macs.
 
-Download zip-filen, pak den ud, og flyt Meikipop.app til Programmer. Appen kører i menulinjen; afslut via Quit.
+Download **Meikipop-macOS.zip**, extract it, and move **Meikipop.app** to Applications. The app runs in the menu bar; choose **Quit** to exit. See **Meikipop-START-HERE.txt** for setup and usage instructions.
 
-Inkluderer Shift-opslag, Yomitan-udtale, Anki-feltmapping, vinduesbilleder og valgfri spillydbuffer på 5–30 sekunder. Spillyd er slået fra ved opstart og aktiveres via Spillyd til Anki → Medtag spillyd i SentenceAudio.
+Includes Shift lookups, Yomitan pronunciation, Anki field mapping, window screenshots, and an optional 5–30 second game audio buffer. Game audio is off at launch. Enable it in the game audio submenu to fill `SentenceAudio`; Yomitan's word pronunciation remains in `ExpressionAudio`.
 
-Appen indeholder den eksisterende private Anki-opsætning. Anki, AnkiConnect, Yomitan og den lokale Yomitan API-komponent er fortsat nødvendige. Appen er ikke Apple-notariseret.
+The release retains the existing private Anki configuration. Anki, AnkiConnect, Yomitan, and the local Yomitan API component are still required. Some app controls remain labeled in Danish. The app is not Apple-notarized.
 
-Pakketesten og syntetiske lydtests er bestået. Rigtig spiloptagelse med macOS-tilladelser skal afprøves på din Mac.
+The packaged self-test and synthetic audio tests passed. Recording from a real game with macOS permissions still needs testing on your Mac.

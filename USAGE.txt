@@ -1,0 +1,47 @@
+MEIKIPOP WITH YOMITAN AND ANKI
+
+GETTING STARTED
+1. Quit any previous Meikipop instance using Quit in its menu bar menu.
+2. Keep Anki with AnkiConnect and your browser with Yomitan open.
+3. Use the Bilingual profile for the existing release configuration.
+4. Open Meikipop.app. Select the game window, request a preview, check it, and continue. Select the text region for OCR.
+5. Hold Shift over a word. Yomitan's pronunciation plays automatically.
+6. Keep holding Shift and move the pointer to the popup. Click the word or + Anki to add it. Click the play button to repeat its pronunciation.
+7. Release Shift to hide the popup and stop pronunciation playback.
+
+The app remains in the menu bar. Use Quit to exit, Pause meikipop to pause scanning and game audio, or the window selection action to choose a different game.
+Some controls in this release are still labeled in Danish; these instructions describe their functions.
+
+ANKI FIELDS
+The existing private release creates an Expression card in the 日本語 deck using the Lapis note type. Yomitan supplies definitions, furigana, readings, word audio, pitch accent, and frequencies using the exported field mapping.
+Sentence contains the OCR text with the selected word highlighted, including inflected forms. MiscInfo is Meikipop. SelectionText is empty because no text was selected in a Yomitan popup. Picture contains a PNG of the selected game window. Other empty fields remain empty unless optional game audio fills SentenceAudio.
+
+Yomitan API and AnkiConnect must be enabled. The local API component is started by Yomitan. Pronunciation downloads use your configured Yomitan audio sources.
+If the active profile, deck, note type, or field mapping differs from the saved configuration, the integration reports an error. Update mining-settings.json to match the new export.
+Duplicate checks and an in-progress guard protect against duplicate additions. The popup footer confirms success or explains the error.
+
+WINDOW CAPTURE
+The selected window is used explicitly, regardless of which application has keyboard focus. Check the preview before confirming it. You can select another window through the menu bar.
+The screenshot belongs to the specific OCR lookup and is taken before the popup appears. If the window closes or is minimized, capture reports an error; it does not substitute another window or the desktop. Temporary images stay in memory; images attached to cards are stored in Anki's media collection.
+
+OPTIONAL GAME AUDIO
+Enable sentence audio through the game audio submenu before the game reads the line.
+Choose the last 5, 10, 15 (default), or 30 seconds. Wait for the line to finish, then click the word or + Anki. The clip ends at click time and is stored as WAV in SentenceAudio. ExpressionAudio keeps Yomitan's word pronunciation.
+
+Audio capture is off at every launch. It captures the application that owns the selected window, including any music and effects. It does not isolate voices or detect sentence boundaries. The microphone is not used.
+The menu shows buffer status or capture errors. If the buffer is empty, silent, stale, or unavailable, card creation is blocked while game audio is enabled. Disable game audio to add cards without it.
+The buffer stays in memory for at most 30 seconds. Disabling capture, pausing, switching windows, or quitting clears it. Resuming or switching windows starts a fresh buffer if the option remains enabled.
+
+PERMISSIONS AND TROUBLESHOOTING
+macOS may request screen/audio recording and Accessibility permissions for Meikipop or its GameAudio helper. Permissions previously granted to Terminal may not apply to the app. Restart the app after granting permissions.
+Log file: ~/Library/Logs/Meikipop/app.log
+Anki, Yomitan, and the separate Yomitan API component remain external dependencies. That API component still uses the existing Python installation.
+
+VALIDATION
+Packaged OCR, dictionary loading, provider discovery, Qt audio initialization, and Anki configuration loading passed. Shift behavior, window selection, buffer limits, menu controls, field mapping, duplicate protection, and simulated media uploads were tested. Native stereo float to mono PCM conversion passed with synthetic audio.
+No test notes were created in Anki, and no live game audio was captured during development testing. Actual game recording with macOS permissions still needs testing.
+
+CREDITS
+Meikipop: https://github.com/rtr46/meikipop — GPL-3.0; see LICENSE.
+Yomitan API: https://github.com/yomidevs/yomitan-api
+Build instructions: app-build/BUILD.txt
