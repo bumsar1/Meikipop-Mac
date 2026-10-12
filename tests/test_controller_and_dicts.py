@@ -130,5 +130,43 @@ class UserDictionaries(unittest.TestCase):
             user_dicts.import_zip(z)
 
 
+class ShorterMatches(unittest.TestCase):
+    def lookup(self):
+        from meikipop.dictionary.lookup import Lookup
+        from meikipop.dictionary.deconjugator import Form
+        lk = Lookup.__new__(Lookup)
+
+        class D:
+            entries = {1: [{'glosses': ['hometown'], 'pos': [], 'tags': []}],
+                       2: [{'glosses': ['ground'], 'pos': [], 'tags': []}]}
+        lk.dictionary = D()
+        raw = [(('地元', 'じもと', 100, 1), Form(text='地元'), 2), (('地', 'ち', 100, 2), Form(text='地'), 1)]
+        return lk, raw
+
+    def test_hidden_by_default_and_shown_when_enabled(self):
+        from meikipop.config.config import config
+        lk, raw = self.lookup()
+        with patch.object(config, 'show_shorter_matches', False):
+            self.assertEqual([e.written_form for e in lk._format_and_sort(raw, '地元')], ['地元'])
+        with patch.object(config, 'show_shorter_matches', True):
+            self.assertEqual([e.written_form for e in lk._format_and_sort(raw, '地元')], ['地元', '地'])
+
+
+class FollowWindow(unittest.TestCase):
+    def test_scan_area_tracks_window_and_keeps_last_when_hidden(self):
+        from meikipop.screenshot import screenmanager
+        sm = screenmanager.ScreenManager.__new__(screenmanager.ScreenManager)
+        sm.capture_window_id, sm.monitor, sm.follow_window = 42, None, True
+        with patch.object(screenmanager, 'window_bounds', return_value=(100, 50, 800, 600)):
+            sm._follow_capture_window()
+        self.assertEqual(sm.get_scan_geometry(), (100, 50, 800, 600))
+        with patch.object(screenmanager, 'window_bounds', return_value=(300, 80, 800, 600)):
+            sm._follow_capture_window()
+        self.assertEqual(sm.get_scan_geometry(), (300, 80, 800, 600))
+        with patch.object(screenmanager, 'window_bounds', return_value=None):  # minimized
+            sm._follow_capture_window()
+        self.assertEqual(sm.get_scan_geometry(), (300, 80, 800, 600))
+
+
 if __name__ == '__main__':
     unittest.main()

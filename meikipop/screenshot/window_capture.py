@@ -70,6 +70,19 @@ def list_windows():
     return result
 
 
+def window_bounds(window_id):
+    """Global (left, top, width, height) of the window in points; None if it is not on screen."""
+    import Quartz
+    windows = Quartz.CGWindowListCopyWindowInfo(
+        Quartz.kCGWindowListOptionIncludingWindow, int(window_id))
+    match = next((w for w in windows or [] if int(w.get('kCGWindowNumber', -1)) == int(window_id)), None)
+    if match is None or not match.get('kCGWindowIsOnscreen', True):
+        return None
+    b = match.get('kCGWindowBounds', {})
+    x, y, w, h = (int(b.get(k, 0)) for k in ('X', 'Y', 'Width', 'Height'))
+    return (x, y, w, h) if w >= 10 and h >= 10 else None
+
+
 def capture_window(window_id, expected_pid=None):
     import Quartz
     if window_id is None:

@@ -37,6 +37,14 @@ Words are split by the longest dictionary match, the same way Shift lookups pick
 
 Choose **Dictionaries…** in the menu bar and add Yomitan dictionary `.zip` files (for example a monolingual or name dictionary). They are added on top of the built-in JMdict and are labelled with their name in the popup. Kanji and frequency-only dictionaries are not supported. Installed dictionaries live in `~/Library/Application Support/meikipop/user_dicts`.
 
+## Scan area that follows the game
+
+Choose **Scan Area → Selected Window (Follows It)** in the menu bar. Meikipop then scans the window picked under **Select Window for Anki Screenshots…** and re-reads its position before every scan, so moving or resizing the window needs no new region. If the window is minimized, the last position is kept.
+
+## Shorter matches
+
+By default the popup lists only the word that was matched (地元), plus the kanji card. Turn on **Settings → Show Shorter Matches** to also list shorter words such as 地.
+
 ## Pronunciation volume
 
 Choose **Pronunciation Volume…** from the menu bar to adjust word pronunciation from 0% (muted) to 100%. The default is 50%, increased from the previous fixed 10%. Changes apply immediately and are saved when the dialog closes. This adjusts playback in Meikipop; it does not rewrite audio attached to Anki cards or change the game audio buffer.

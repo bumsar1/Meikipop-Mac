@@ -5,7 +5,7 @@ import time
 import sys
 
 from PIL import Image
-from .window_capture import capture_window
+from .window_capture import capture_window, window_bounds
 
 from meikipop.config.config import config, IS_WAYLAND
 from meikipop.gui.region_selector import RegionSelector
@@ -37,10 +37,13 @@ class ScreenManager(threading.Thread):
         self.capture_window_id = None
         self.capture_window_pid = None
         self.capture_window_label = ""
+        self.follow_window = False
         if not self.select_capture_window():
             sys.exit(0)
         if config.scan_region == "region":
             self.set_scan_region()
+        elif config.scan_region == "window":
+            self.set_scan_window()
         else:
             try:
                 screen_idx = int(config.scan_region)
@@ -104,6 +107,8 @@ class ScreenManager(threading.Thread):
         logger.debug("Screenshot thread stopped.")
 
     def take_screenshot(self):
+        if self.follow_window:
+            self._follow_capture_window()
         with mss.mss() as sct:
             sct_img = sct.grab(self.monitor)
             self.window_frame = None
@@ -138,7 +143,26 @@ class ScreenManager(threading.Thread):
             logger.info('Anki image window: %s (ID %s)', self.capture_window_label, self.capture_window_id)
             return True
 
+    def set_scan_window(self):
+        """Scan the selected window wherever it is; its position is re-read before every screenshot."""
+        logger.info("Set scan area to the selected window")
+        self.follow_window = True
+        self._follow_capture_window()
+        self.force_screenshot_trigger()
+
+    def _follow_capture_window(self):
+        bounds = window_bounds(self.capture_window_id) if self.capture_window_id else None
+        if bounds is None:
+            logger.debug("Selected window not on screen; keeping the last scan area")
+            return
+        x, y, w, h = bounds
+        monitor = {"top": y, "left": x, "width": w, "height": h}
+        if monitor != self.monitor:
+            logger.info(f"Scan area follows window: {monitor}")
+            self.monitor = monitor
+
     def set_scan_region(self):
+        self.follow_window = False
         scan_rect = RegionSelector.get_region()
         if scan_rect:
             logger.info(f"Set scan area to region {scan_rect}")
@@ -150,6 +174,7 @@ class ScreenManager(threading.Thread):
             return False
 
     def set_scan_screen(self, screen_index):
+        self.follow_window = False
         logger.info(f"Set scan area to screen {screen_index}")
         with mss.mss() as sct:
             if screen_index < len(sct.monitors):

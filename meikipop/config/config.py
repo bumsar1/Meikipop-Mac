@@ -58,6 +58,7 @@ class Config:
             'show_tags': False,
             'show_frequency': False,
             'show_kanji': True,
+            'show_shorter_matches': False,
             'show_examples': True,
             'show_components': True,
             'color_background': '#2E2E2E',

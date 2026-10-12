@@ -149,6 +149,12 @@ class TrayIcon(QSystemTrayIcon):
         self.scan_area_action_group.addAction(region_action)
         self.scan_area_actions.append(region_action)
 
+        window_action = scan_area_menu.addAction("Selected Window (Follows It)")
+        window_action.setCheckable(True)
+        window_action.setData('window')
+        self.scan_area_action_group.addAction(window_action)
+        self.scan_area_actions.append(window_action)
+
         for i, res in enumerate(self.screen_manager.get_screens()):
             action = scan_area_menu.addAction(f"Screen {i} ({res['width']}x{res['height']})")
             action.setCheckable(True)
@@ -280,7 +286,12 @@ class TrayIcon(QSystemTrayIcon):
 
     def _on_scan_area_selected(self, action: QAction):
         selected_id = action.data()
-        if selected_id == 'region':
+        if selected_id == 'window':
+            self.screen_manager.set_scan_window()
+            if config.scan_region != 'window':
+                config.scan_region = 'window'
+                config.save()
+        elif selected_id == 'region':
             if self.screen_manager.set_scan_region():
                 if config.scan_region != 'region':
                     config.scan_region = 'region'

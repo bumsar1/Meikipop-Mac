@@ -204,6 +204,11 @@ class SettingsDialog(QDialog):
         self.show_frequency_check.setChecked(config.show_frequency)
         vocab_layout.addRow("Show Frequency:", self.show_frequency_check)
 
+        self.show_shorter_check = QCheckBox()
+        self.show_shorter_check.setChecked(config.show_shorter_matches)
+        self.show_shorter_check.setToolTip("Also list shorter words, e.g. 地 under 地元")
+        vocab_layout.addRow("Show Shorter Matches:", self.show_shorter_check)
+
         vocab_group.setLayout(vocab_layout)
         self.tab_content_layout.addWidget(vocab_group)
 
@@ -436,6 +441,9 @@ class SettingsDialog(QDialog):
         config.show_pos = self.show_pos_check.isChecked()
         config.show_tags = self.show_tags_check.isChecked()
         config.show_frequency = self.show_frequency_check.isChecked()
+        if config.show_shorter_matches != self.show_shorter_check.isChecked():
+            config.show_shorter_matches = self.show_shorter_check.isChecked()
+            self.lookup.clear_cache()
         config.show_kanji = self.show_kanji_check.isChecked()
         config.show_examples = self.show_examples_check.isChecked()
         config.show_components = self.show_components_check.isChecked()

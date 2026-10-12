@@ -265,6 +265,8 @@ class Lookup(threading.Thread):
         longest = sorted_entries[0]['match_len'] if sorted_entries else 0
         kept = []
         for d in sorted_entries:
+            if d['match_len'] < longest and not config.show_shorter_matches:
+                continue
             seen = set()
             senses = []
             for sense in d['senses']:
