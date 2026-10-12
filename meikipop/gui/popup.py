@@ -22,6 +22,7 @@ if IS_MACOS:
         Quartz = None
 
 logger = logging.getLogger(__name__)
+USER_GLOSS_LIMIT = 300  # extra dictionaries can carry whole encyclopedia paragraphs
 
 
 class Popup(QWidget):
@@ -444,6 +445,8 @@ class Popup(QWidget):
                 glosses_str = ""
                 if glosses:
                     glosses_str = ", ".join(glosses) if config.show_all_glosses else sense.get('glosses')[0]
+                if sense.get('dict') and len(glosses_str) > USER_GLOSS_LIMIT:
+                    glosses_str = glosses_str[:USER_GLOSS_LIMIT].rstrip() + "…"
                 glosses_str = html.escape(glosses_str)
                 pos_list  = sense.get('pos', [])
                 tags_list = sense.get('tags', [])

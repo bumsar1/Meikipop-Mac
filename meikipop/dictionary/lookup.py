@@ -260,6 +260,25 @@ class Lookup(threading.Thread):
             reverse=True,
         )
 
+        # Extra (user) dictionaries only describe the word actually matched; shorter
+        # prefixes keep just the main dictionary so the popup stays readable.
+        longest = sorted_entries[0]['match_len'] if sorted_entries else 0
+        kept = []
+        for d in sorted_entries:
+            seen = set()
+            senses = []
+            for sense in d['senses']:
+                if sense.get('dict') and d['match_len'] < longest:
+                    continue
+                key = (sense.get('dict'), tuple(sense.get('glosses', [])))
+                if key not in seen:
+                    seen.add(key)
+                    senses.append(sense)
+            if senses:
+                d['senses'] = senses
+                kept.append(d)
+        sorted_entries = kept
+
         results = []
         for d in sorted_entries[:MAX_DICT_ENTRIES]:
             results.append(DictionaryEntry(
