@@ -69,7 +69,11 @@ def run_gui():
 
     ocr_processor = OcrProcessor(shared_state, screen_manager)
     hit_scanner = HitScanner(shared_state, input_loop, screen_manager)
-    tray_icon = TrayIcon(screen_manager, ocr_processor, popup_window, input_loop, lookup)
+    from meikipop.controller import ControllerInput, ControllerNavigator
+    hit_scanner.navigator = ControllerNavigator(lookup)
+    controller = ControllerInput(shared_state, screen_manager, hit_scanner, popup_window, hit_scanner.navigator)
+    popup_window.controller = controller
+    tray_icon = TrayIcon(screen_manager, ocr_processor, popup_window, input_loop, lookup, controller)
 
     for t in [lookup, hit_scanner, ocr_processor, screen_manager, input_loop]:
         t.start()

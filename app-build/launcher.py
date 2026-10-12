@@ -61,6 +61,8 @@ try:
         import Quartz
         import pynput.mouse._darwin
         assert Quartz.CGWindowListCreateImage
+        from meikipop.controller import Gamepad
+        assert Gamepad().available, 'Controller support missing'
         player = QMediaPlayer()
         import subprocess, struct
         from meikipop.game_audio import AudioRing

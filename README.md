@@ -21,6 +21,22 @@ The app interface is in English. See [USAGE.txt](USAGE.txt) for additional detai
 
 Game audio is off at every launch. It captures audio from the selected game's application, including music and effects; it does not automatically detect sentence boundaries. The microphone is not used. The buffer stays in memory and is cleared when capture stops, the app pauses, or the selected window changes. Added clips go into `SentenceAudio`; Yomitan's word pronunciation stays in `ExpressionAudio`.
 
+## Controller lookups
+
+Connect a controller (Xbox, PlayStation, Switch Pro or other MFi pad) and hold **LB**. Meikipop scans the text region, outlines the first word, and shows its popup.
+
+- **D-pad left/right** moves word to word; **up/down** moves to the line above or below. Holding repeats.
+- **A** adds the top entry to Anki; **X** replays the pronunciation.
+- Release **LB** to close.
+
+The menu bar **Controller** submenu changes the button (LB, RB, LT, RT, L3, R3, Back), switches between hold and press-on/press-off (then **B** also closes), and shows the connected controller. **Pause Game Input While Looking Up** briefly brings Meikipop to the front, so games that read the controller through macOS stop reacting while you navigate. The game still sees the lookup button press itself.
+
+Words are split by the longest dictionary match, the same way Shift lookups pick a word.
+
+## Extra dictionaries
+
+Choose **Dictionaries…** in the menu bar and add Yomitan dictionary `.zip` files (for example a monolingual or name dictionary). They are added on top of the built-in JMdict and are labelled with their name in the popup. Kanji and frequency-only dictionaries are not supported. Installed dictionaries live in `~/Library/Application Support/meikipop/user_dicts`.
+
 ## Pronunciation volume
 
 Choose **Pronunciation Volume…** from the menu bar to adjust word pronunciation from 0% (muted) to 100%. The default is 50%, increased from the previous fixed 10%. Changes apply immediately and are saved when the dialog closes. This adjusts playback in Meikipop; it does not rewrite audio attached to Anki cards or change the game audio buffer.

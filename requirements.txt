@@ -12,6 +12,7 @@ keyboard~=0.13.5; sys_platform == "win32"
 python-xlib~=0.33; sys_platform == "linux"
 pyobjc-framework-Quartz>=10.0; sys_platform == "darwin"
 pyobjc-framework-Cocoa>=10.0; sys_platform == "darwin"
+pyobjc-framework-GameController>=10.0; sys_platform == "darwin"
 lxml
 platformdirs
 pyinstaller==6.20.0

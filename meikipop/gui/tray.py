@@ -12,7 +12,7 @@ from meikipop.utils.paths import paths
 
 
 class TrayIcon(QSystemTrayIcon):
-    def __init__(self, screen_manager, ocr_processor: OcrProcessor, popup_window, input_loop, lookup, parent=None):
+    def __init__(self, screen_manager, ocr_processor: OcrProcessor, popup_window, input_loop, lookup, controller=None, parent=None):
         # Resolve icon paths using
         icon_path = paths.get_resource_path('icon.ico')
         icon_inactive_path = paths.get_resource_path('icon.inactive.ico')
@@ -61,6 +61,45 @@ class TrayIcon(QSystemTrayIcon):
         self.audio_timer.start(1000)
 
         self.menu.addAction("Pronunciation Volume…").triggered.connect(self.show_pronunciation_volume)
+        self.menu.addAction("Dictionaries…").triggered.connect(self.show_dictionaries)
+
+        self.controller = controller
+        pad_menu = self.menu.addMenu("Controller")
+        self.pad_enabled = pad_menu.addAction("Look Up Words with Controller")
+        self.pad_enabled.setCheckable(True)
+        self.pad_enabled.setChecked(config.controller_enabled)
+        self.pad_enabled.triggered.connect(lambda on: self._set_pad('controller_enabled', on))
+        pad_menu.addSeparator()
+        buttons = QActionGroup(self)
+        buttons.setExclusive(True)
+        for name in ('LB', 'RB', 'LT', 'RT', 'L3', 'R3', 'Back'):
+            action = pad_menu.addAction(f"Lookup Button: {name}")
+            action.setCheckable(True)
+            action.setChecked(name == config.controller_hold_button)
+            action.setData(name)
+            buttons.addAction(action)
+        buttons.triggered.connect(lambda a: self._set_pad('controller_hold_button', a.data()))
+        pad_menu.addSeparator()
+        modes = QActionGroup(self)
+        modes.setExclusive(True)
+        for mode, label in (('hold', 'Hold Button to Look Up'), ('toggle', 'Press Button to Turn On/Off')):
+            action = pad_menu.addAction(label)
+            action.setCheckable(True)
+            action.setChecked(mode == config.controller_mode)
+            action.setData(mode)
+            modes.addAction(action)
+        modes.triggered.connect(lambda a: self._set_pad('controller_mode', a.data()))
+        pad_menu.addSeparator()
+        block = pad_menu.addAction("Pause Game Input While Looking Up")
+        block.setCheckable(True)
+        block.setChecked(config.controller_block_game_input)
+        block.triggered.connect(lambda on: self._set_pad('controller_block_game_input', on))
+        self.pad_status = pad_menu.addAction("No controller connected")
+        self.pad_status.setEnabled(False)
+        self.pad_timer = QTimer(self)
+        self.pad_timer.timeout.connect(self._refresh_pad_status)
+        self.pad_timer.start(2000)
+        self._refresh_pad_status()
 
         # Settings Action
         self.menu.addAction("Settings").triggered.connect(self.show_settings)
@@ -165,6 +204,24 @@ class TrayIcon(QSystemTrayIcon):
                 config.save()
             except OSError as error:
                 QMessageBox.warning(None, "Could Not Save Volume", f"The volume changed for this session, but could not be saved: {error}")
+
+    def show_dictionaries(self):
+        from meikipop.gui.dictionaries_dialog import DictionariesDialog
+        DictionariesDialog(self.lookup).exec()
+
+    def _set_pad(self, key, value):
+        setattr(config, key, value)
+        try:
+            config.save()
+        except OSError as error:
+            QMessageBox.warning(None, "Could Not Save Setting", str(error))
+
+    def _refresh_pad_status(self):
+        if self.controller is None or not self.controller.gamepad.available:
+            self.pad_status.setText("Controller support unavailable")
+            return
+        name = self.controller.gamepad.name()
+        self.pad_status.setText(f"Connected: {name}" if name else "No controller connected")
 
     def toggle_game_audio(self, checked):
         self.audio.enabled = checked

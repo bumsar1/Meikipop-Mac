@@ -16,6 +16,8 @@ class HitScanner(threading.Thread):
         self.input_loop = input_loop
         self.screen_manager = screen_manager
         self.last_ocr_result = None
+        self.last_paragraphs = None
+        self.navigator = None  # set once the dictionary is loaded
 
     def run(self):
         logger.debug("HitScanner thread started.")
@@ -24,6 +26,13 @@ class HitScanner(threading.Thread):
                 ocr_result = self.shared_state.hit_scan_queue.get()
                 if not self.shared_state.running: break
                 logger.debug("HitScanner: Triggered")
+                navigator = self.navigator
+                if navigator is not None and navigator.active:
+                    navigator.offer(ocr_result)
+                    self.last_paragraphs = ocr_result
+                    self.shared_state.lookup_queue.put(navigator.mining_text())
+                    continue
+                self.last_paragraphs = ocr_result
                 hit_scan_result = self.hit_scan(ocr_result)
                 self.shared_state.lookup_queue.put(hit_scan_result)
             except:

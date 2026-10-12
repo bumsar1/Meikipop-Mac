@@ -40,7 +40,11 @@ class Config:
             'auto_scan_interval_seconds': 0.5,
             'auto_scan_on_mouse_move': True,
             'magpie_compatibility': True,
-            'validated_dict_ts': -1
+            'validated_dict_ts': -1,
+            'controller_enabled': True,
+            'controller_hold_button': 'LB',
+            'controller_mode': 'hold',
+            'controller_block_game_input': True
         },
         'Theme': {
             'theme_name': 'Nazeka',

@@ -64,6 +64,8 @@ class Dictionary:
                 issues = self._validate()
                 config.validated_dict_ts = dict_ts if issues == 0 else -1
                 config.save()
+            from meikipop.dictionary.user_dicts import merge_into
+            merge_into(self)
             return True
         except FileNotFoundError:
             logger.warning(f"Dictionary file not found. Trying download...")

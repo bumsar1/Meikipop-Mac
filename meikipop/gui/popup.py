@@ -35,6 +35,7 @@ class Popup(QWidget):
 
         self.shared_state = shared_state
         self.input_loop = input_loop
+        self.controller = None  # ControllerInput, attached after the dictionary loads
 
         self.is_visible = False
         self.timer = QTimer(self)
@@ -187,7 +188,8 @@ class Popup(QWidget):
         if not self.is_calibrated:
             self._calibrate_empirically()
         pos = QCursor.pos()
-        active = self.input_loop.is_virtual_hotkey_down() and config.is_enabled
+        pad = self.controller is not None and self.controller.navigator.active
+        active = (self.input_loop.is_virtual_hotkey_down() or pad) and config.is_enabled
         # Shift release always wins, even while the pointer is inside the popup.
         if not active:
             self.hide_popup()
@@ -196,7 +198,7 @@ class Popup(QWidget):
                 self._pronunciation_key = None
             return
         # Keep the selected entries fixed while clicking Anki or replaying audio.
-        if self.is_visible and (self._mining_busy or self.geometry().adjusted(-30, -30, 30, 30).contains(pos)):
+        if self.is_visible and (self._mining_busy or (not pad and self.geometry().adjusted(-30, -30, 30, 30).contains(pos))):
             return
         latest = self.get_latest_data()
         if latest and active:
@@ -207,10 +209,15 @@ class Popup(QWidget):
                 self.display_label.setText(full_html)
                 new_size.setHeight(new_size.height() + 48)
                 self.setFixedSize(new_size)
-                self.mining_status.setText("Hold Shift · ＋ Anki adds · ▶ replays pronunciation")
+                self.mining_status.setText(self._hint(pad))
+            changed = latest != self._last_latest_data
             self._mining_entries = latest
             self._last_latest_data = latest
-            if not self.is_visible:
+            if pad:
+                token = self.controller.navigator.current()
+                if token is not None and (changed or not self.is_visible):
+                    self._move_below_word(token)
+            elif not self.is_visible:
                 self.move_to(pos.x(), pos.y())
             self.show_popup()
             if needs_check:
@@ -225,6 +232,35 @@ class Popup(QWidget):
             self.hide_popup()
             self.pronunciation.stop()
             self._pronunciation_key = None
+
+    @staticmethod
+    def _hint(pad):
+        return "Ⓐ adds to Anki · Ⓧ replays pronunciation" if pad else "Hold Shift · ＋ Anki adds · ▶ replays pronunciation"
+
+    def _move_below_word(self, token):
+        x, y, w, h = self.controller.token_screen_rect(token)
+        screen = QApplication.screenAt(QPoint(int(x), int(y))) or QApplication.primaryScreen()
+        geo = screen.geometry()
+        gap = 10
+        final_y = y + h + gap
+        if final_y + self.height() > geo.bottom():
+            final_y = y - self.height() - gap
+        final_x = max(geo.left(), min(x, geo.right() - self.width()))
+        final_y = max(geo.top(), min(final_y, geo.bottom() - self.height()))
+        self.move(int(final_x), int(final_y))
+
+    def _first_entry_index(self):
+        return next((i for i, e in enumerate(self._mining_entries) if isinstance(e, DictionaryEntry)), None)
+
+    def mine_first_entry(self):
+        i = self._first_entry_index()
+        if self.is_visible and i is not None:
+            self._mine_clicked(f'mine:{i}')
+
+    def replay_first_entry(self):
+        i = self._first_entry_index()
+        if self.is_visible and i is not None:
+            self._mine_clicked(f'audio:{i}')
 
     def _check_anki_status(self):
         if not self.is_visible or self._mining_busy:
@@ -402,15 +438,22 @@ class Popup(QWidget):
                 header_html += f' <span style="color:{config.color_foreground}; font-size:{config.font_size_definitions - 2}px; opacity:0.6;">#{entry.freq}</span>'
             def_text_parts_calc = []
             def_text_parts_html = []
+            last_dict = None
             for idx, sense in enumerate(entry.senses):
                 glosses = sense.get('glosses', [])
                 glosses_str = ""
                 if glosses:
                     glosses_str = ", ".join(glosses) if config.show_all_glosses else sense.get('glosses')[0]
+                glosses_str = html.escape(glosses_str)
                 pos_list  = sense.get('pos', [])
                 tags_list = sense.get('tags', [])
                 sense_calc = f"({idx + 1})" if config.show_all_glosses else ""
                 sense_html = f"<b>({idx + 1})</b> " if config.show_all_glosses else ""
+                source = sense.get('dict')
+                if source and source != last_dict:
+                    sense_calc = f"[{source}] " + sense_calc
+                    sense_html = f'<span style="color:{config.color_highlight_reading}; font-size:{config.font_size_definitions - 2}px;">[{html.escape(source)}]</span> ' + sense_html
+                last_dict = source
                 if config.show_pos and pos_list:
                     pos_str = f' ({", ".join(pos_list)})'
                     sense_calc += pos_str
@@ -580,6 +623,9 @@ class Popup(QWidget):
         try:
             # Get the currently active application
             active_app = Quartz.NSWorkspace.sharedWorkspace().frontmostApplication()
+            from AppKit import NSRunningApplication
+            if active_app and active_app.processIdentifier() == NSRunningApplication.currentApplication().processIdentifier():
+                active_app = None  # controller mode activated us; it hands focus back itself
             if active_app:
                 # Store the application reference instead of trying to get the window
                 # We'll use the application to restore focus later
