@@ -32,10 +32,11 @@ def click_at(x, y) -> bool:
         return False
     back = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
     point = Quartz.CGPointMake(x, y)
-    for kind in (Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp):
+    # Move first: many engines only accept a click on a choice they have seen hovered.
+    for kind in (Quartz.kCGEventMouseMoved, Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp):
         event = Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonLeft)
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
-        time.sleep(0.02)
+        time.sleep(0.05 if kind == Quartz.kCGEventMouseMoved else 0.02)
     Quartz.CGWarpMouseCursorPosition(back)
     Quartz.CGAssociateMouseAndMouseCursorPosition(True)
     return True
@@ -355,11 +356,18 @@ class ControllerInput(QObject):
         self._update_highlight()
 
     def advance_text(self):
-        """Visual novel mode: left-click the middle of the scan area, like clicking the text box."""
+        """Visual novel mode: left-click the selected word (e.g. a dialogue choice) while looking up,
+        otherwise the middle of the scan area, like clicking the text box."""
         left, top, width, height = self.screen_manager.get_scan_geometry()
         if not width:
             return
         looking_up = self.navigator.active
+        token = self.navigator.current() if looking_up else None
+        if token is not None:
+            x, y, w, h = self.token_screen_rect(token)
+            target = (x + w / 2, y + h / 2)
+        else:
+            target = (left + width / 2, top + height / 2)
         if looking_up:  # get the popup out of the way and wait for the next line
             self.highlight.hide()
             self.popup.hide_popup()
@@ -370,7 +378,7 @@ class ControllerInput(QObject):
             self._activate(app)  # the click must land in the game, not in Meikipop
 
         def click():
-            if not click_at(left + width / 2, top + height / 2):
+            if not click_at(*target):
                 self.popup.mining_status.setText("Allow Meikipop under Privacy & Security → Accessibility to advance text.")
                 return
             if looking_up and self.navigator.active:

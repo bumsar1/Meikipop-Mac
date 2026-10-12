@@ -227,5 +227,24 @@ class VisualNovelMode(unittest.TestCase):
             click.assert_not_called()
 
 
+    def test_x_while_looking_up_clicks_the_selected_word(self):
+        from meikipop.config.config import config
+        from PyQt6.QtWidgets import QApplication
+        c, ctl, pad = self.controller()
+        ctl.navigator.word_length = word_length
+        ctl.navigator.begin(None)
+        ctl.navigator.offer([line('今日は', 0.3), line('青空が', 0.6)])  # two choices
+        ctl.navigator.move(0, 1)  # down to the second choice
+        with patch.object(c, 'click_at', return_value=True) as click, patch.object(c.QTimer, 'singleShot', lambda ms, f: f()), \
+             patch.object(config, 'vn_mode', True), patch.object(config, 'controller_enabled', True), \
+             patch.object(config, 'controller_block_game_input', False):
+            pad.buttons['leftShoulder'].down = True
+            pad.buttons['buttonX'].down = True
+            ctl._poll()
+        x, y = click.call_args[0]
+        self.assertAlmostEqual(x, 100 + 0.15 * 400)  # centre of 青空 (0.1–0.2 of the width)
+        self.assertAlmostEqual(y, 200 + 0.6 * 100)
+
+
 if __name__ == '__main__':
     unittest.main()
