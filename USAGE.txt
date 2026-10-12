@@ -50,7 +50,29 @@ Yomitan API: https://github.com/yomidevs/yomitan-api
 Build instructions: app-build/BUILD.txt
 
 EXISTING WORD INDICATOR
-The word header shows Checking Anki… while a background check runs. Already in Anki replaces the add link when the complete expression exists in the configured deck or its subdecks. Pronunciation still works. New words show + Anki. Anki unavailable means verification failed, not that the word is new. Checks are refreshed after a short cache interval (up to five seconds), and every addition is checked again before any media is uploaded.
+The word header shows Checking Anki… while a background check runs. Already in Anki replaces the add link when the complete expression exists in the configured deck or its subdecks. Pronunciation still works. New words show + Anki. Anki unavailable means verification failed, not that the word is new. Checks are refreshed in the background every few seconds; the last result stays visible meanwhile, so the popup does not flicker. Every addition is checked again before any media is uploaded.
 
 PRONUNCIATION VOLUME
 Choose Pronunciation Volume… from the menu bar. Adjust the slider between 0% (muted) and 100%. The default is now 50% instead of a fixed 10%. Changes apply immediately and are saved when you close the dialog. This affects word playback in Meikipop, not stored Anki media or game audio capture.
+
+CONTROLLER LOOKUPS
+Connect a controller (Xbox, PlayStation, Switch Pro or other MFi pad). Hold LB: Meikipop reads the text region, outlines the first word and shows its popup.
+D-pad left/right moves word to word; up/down moves to the line above or below. Holding a direction repeats.
+A adds the top entry to Anki. X replays the pronunciation (Y in visual novel mode). Release LB to close.
+The menu bar Controller submenu changes the button (LB, RB, LT, RT, L3, R3, Back), switches between hold and press-on/press-off (then B also closes), and shows the connected controller.
+Pause Game Input While Looking Up briefly brings Meikipop to the front, so games that read the controller through macOS stop reacting while you navigate. The game still sees the lookup button itself.
+
+VISUAL NOVEL MODE
+Turn on Controller → Visual Novel Mode, meant for games without controller support.
+X left-clicks the middle of the scan area to advance text. While LB is held, X instead clicks the outlined word, which picks a dialogue choice; the next line is then read automatically. Choices must be inside the scan area, so use Scan Area → Selected Window.
+Left stick moves the mouse pointer (further tilt is faster). A left-clicks and B right-clicks where it points; in most visual novels a right-click opens the Save/Load menu. Right stick up/down scrolls, e.g. the backlog.
+macOS asks for Accessibility permission the first time.
+
+SCAN AREA THAT FOLLOWS THE GAME
+Choose Scan Area → Selected Window (Follows It). Meikipop scans the selected game window and re-reads its position before every scan, so moving or resizing it needs no new region. The whole window is scanned, including any title bar.
+
+EXTRA DICTIONARIES
+Choose Dictionaries… in the menu bar and add Yomitan dictionary .zip files. They are added on top of the built-in JMdict and labelled with their name in the popup. They only add definitions to the matched word; duplicates are removed and very long definitions are shortened. Kanji and frequency-only dictionaries are not supported.
+
+SHORTER MATCHES
+The popup lists only the matched word (e.g. 地元) plus the kanji card. Turn on Settings → Show Shorter Matches to also list shorter words such as 地.
