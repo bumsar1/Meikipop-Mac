@@ -236,7 +236,9 @@ class Popup(QWidget):
 
     @staticmethod
     def _hint(pad):
-        return "Ⓐ adds to Anki · Ⓧ replays pronunciation" if pad else "Hold Shift · ＋ Anki adds · ▶ replays pronunciation"
+        if pad:
+            return "Ⓐ adds to Anki · Ⓨ replays · Ⓧ next line" if config.vn_mode else "Ⓐ adds to Anki · Ⓧ replays pronunciation"
+        return "Hold Shift · ＋ Anki adds · ▶ replays pronunciation"
 
     def _move_below_word(self, token):
         x, y, w, h = self.controller.token_screen_rect(token)
@@ -273,6 +275,8 @@ class Popup(QWidget):
         if not self.is_calibrated or not self._mining_entries:
             return
         content, size = self._calculate_content_and_size_char_count(self._mining_entries)
+        if content == self.display_label.text():
+            return
         self.display_label.setText(content)
         size.setHeight(size.height() + 48)
         self.setFixedSize(size)

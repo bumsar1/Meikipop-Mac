@@ -63,6 +63,7 @@ try:
         assert Quartz.CGWindowListCreateImage
         from meikipop.controller import Gamepad
         assert Gamepad().available, 'Controller support missing'
+        from ApplicationServices import AXIsProcessTrustedWithOptions
         player = QMediaPlayer()
         import subprocess, struct
         from meikipop.game_audio import AudioRing

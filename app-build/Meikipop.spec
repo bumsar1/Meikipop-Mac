@@ -6,7 +6,7 @@ data=json.loads((Path(SPECPATH)/'models.json').read_text())
 data += [(str(src/'mining-settings.json'),'.'),(str(src/'LICENSE'),'licenses'),(str(Path.home()/'Library/Application Support/meikipop/dictionary.pkl'),'.')]
 data += [(str(Path(SPECPATH)/'licenses'), 'licenses/third-party')]
 data += collect_data_files('meikipop', include_py_files=True)
-hidden=collect_submodules('meikipop') + ['pynput.mouse._darwin','pynput.keyboard._darwin','Quartz','AppKit','Foundation','GameController']
+hidden=collect_submodules('meikipop') + ['pynput.mouse._darwin','pynput.keyboard._darwin','Quartz','AppKit','Foundation','GameController','ApplicationServices']
 a=Analysis([str(Path(SPECPATH)/'launcher.py')], pathex=[str(src)], binaries=[(str(src/'native/GameAudio'), 'native')], datas=data, hiddenimports=hidden, excludes=['torch','tensorflow','matplotlib','pandas','scipy','tkinter','IPython'], noarchive=False)
 pyz=PYZ(a.pure)
 exe=EXE(pyz,a.scripts,[],exclude_binaries=True,name='Meikipop',debug=False,strip=False,upx=False,console=False,argv_emulation=False,target_arch='arm64')

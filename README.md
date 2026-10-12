@@ -31,6 +31,8 @@ Connect a controller (Xbox, PlayStation, Switch Pro or other MFi pad) and hold *
 
 The menu bar **Controller** submenu changes the button (LB, RB, LT, RT, L3, R3, Back), switches between hold and press-on/press-off (then **B** also closes), and shows the connected controller. **Pause Game Input While Looking Up** briefly brings Meikipop to the front, so games that read the controller through macOS stop reacting while you navigate. The game still sees the lookup button press itself.
 
+**Visual Novel Mode** (Controller submenu) makes **X** left-click the middle of the scan area, like clicking the text box, so you can advance text in games without controller support. It works with or without the lookup button held; while looking up, the popup closes and the new line is read automatically. Pronunciation replay moves to **Y**. macOS asks for Accessibility permission the first time.
+
 Words are split by the longest dictionary match, the same way Shift lookups pick a word.
 
 ## Extra dictionaries

@@ -17,15 +17,18 @@ class AnkiStatus(QObject):
         self.completed.connect(self._completed)
 
     def state(self, word):
+        # An expired result stays on screen while it is re-checked, so the popup doesn't flicker.
         item = self.cache.get(word)
-        if item is None or item[1] < time.monotonic():
-            return 'checking'
-        return item[0]
+        return 'checking' if item is None else item[0]
+
+    def needs_check(self, word):
+        item = self.cache.get(word)
+        return item is None or item[1] < time.monotonic()
 
     def request(self, words):
         if self.busy:
             return
-        pending = list(dict.fromkeys(w for w in words if w and self.state(w) == 'checking'))
+        pending = list(dict.fromkeys(w for w in words if w and self.needs_check(w)))
         if not pending:
             return
         self.busy = True

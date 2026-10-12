@@ -18,6 +18,27 @@ logger = logging.getLogger(__name__)
 HOLD_BUTTONS = {'LB': 'leftShoulder', 'RB': 'rightShoulder', 'LT': 'leftTrigger', 'RT': 'rightTrigger',
                 'L3': 'leftThumbstickButton', 'R3': 'rightThumbstickButton', 'Back': 'buttonOptions'}
 REPEAT_DELAY, REPEAT_INTERVAL = 0.4, 0.15
+VN_RESCAN_DELAY_MS = 400  # let the game draw the next line before reading it
+
+
+def click_at(x, y) -> bool:
+    """Left-click at a global point in points, then put the cursor back. False without Accessibility access."""
+    if not IS_MACOS:
+        return False
+    import Quartz
+    from ApplicationServices import AXIsProcessTrustedWithOptions, kAXTrustedCheckOptionPrompt
+    if not AXIsProcessTrustedWithOptions({kAXTrustedCheckOptionPrompt: True}):
+        logger.warning("Visual novel mode needs Accessibility permission to click")
+        return False
+    back = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
+    point = Quartz.CGPointMake(x, y)
+    for kind in (Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp):
+        event = Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonLeft)
+        Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
+        time.sleep(0.02)
+    Quartz.CGWarpMouseCursorPosition(back)
+    Quartz.CGAssociateMouseAndMouseCursorPosition(True)
+    return True
 
 
 @dataclass(frozen=True)
@@ -294,6 +315,13 @@ class ControllerInput(QObject):
                 self._stop()
             return
         pad = found[1]
+        pressed_a = self._edge('a', self._pressed(pad, 'buttonA'))
+        pressed_b = self._edge('b', self._pressed(pad, 'buttonB'))
+        pressed_x = self._edge('x', self._pressed(pad, 'buttonX'))
+        pressed_y = self._edge('y', self._pressed(pad, 'buttonY'))
+        if pressed_x and config.vn_mode:
+            self.advance_text()
+            return
         hold = self._pressed(pad, HOLD_BUTTONS.get(config.controller_hold_button, 'leftShoulder'))
         if config.controller_mode == 'toggle':
             if self._edge('hold', hold):
@@ -317,14 +345,44 @@ class ControllerInput(QObject):
                 moved |= self.navigator.move(dx, dy)
         if moved:
             self.shared_state.hit_scan_queue.trigger()
-        if self._edge('a', self._pressed(pad, 'buttonA')):
+        if pressed_a:
             self.popup.mine_first_entry()
-        if self._edge('x', self._pressed(pad, 'buttonX')):
+        if pressed_y or (pressed_x and not config.vn_mode):
             self.popup.replay_first_entry()
-        if self._edge('b', self._pressed(pad, 'buttonB')) and config.controller_mode == 'toggle':
+        if pressed_b and config.controller_mode == 'toggle':
             self._toggled_on = False
             self._stop()
         self._update_highlight()
+
+    def advance_text(self):
+        """Visual novel mode: left-click the middle of the scan area, like clicking the text box."""
+        left, top, width, height = self.screen_manager.get_scan_geometry()
+        if not width:
+            return
+        looking_up = self.navigator.active
+        if looking_up:  # get the popup out of the way and wait for the next line
+            self.highlight.hide()
+            self.popup.hide_popup()
+            self.navigator.begin(self.hit_scanner.last_paragraphs)
+            self._shown_token = None
+        app, self._game_app = self._game_app, None
+        if app is not None:
+            self._activate(app)  # the click must land in the game, not in Meikipop
+
+        def click():
+            if not click_at(left + width / 2, top + height / 2):
+                self.popup.mining_status.setText("Allow Meikipop under Privacy & Security → Accessibility to advance text.")
+                return
+            if looking_up and self.navigator.active:
+                if config.controller_block_game_input:
+                    QTimer.singleShot(150, self._take_focus)
+                QTimer.singleShot(VN_RESCAN_DELAY_MS, self._rescan)
+        QTimer.singleShot(60 if app is not None else 0, click)
+
+    def _rescan(self):
+        if self.navigator.active:
+            self.screen_manager.force_screenshot_trigger()
+            self.shared_state.screenshot_trigger_event.set()
 
     def _start(self):
         logger.info("Controller: lookup mode on")

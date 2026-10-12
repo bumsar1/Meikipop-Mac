@@ -168,5 +168,64 @@ class FollowWindow(unittest.TestCase):
         self.assertEqual(sm.get_scan_geometry(), (300, 80, 800, 600))
 
 
+class FakeButton:
+    def __init__(self, down=False): self.down = down
+    def isPressed(self): return self.down
+
+
+class FakePad:
+    def __init__(self):
+        self.buttons = {n: FakeButton() for n in ('buttonA', 'buttonB', 'buttonX', 'buttonY', 'leftShoulder')}
+        dirs = {d: FakeButton() for d in ('left', 'right', 'up', 'down')}
+        self._dpad = type('D', (), {d: (lambda self, b=b: b) for d, b in dirs.items()})()
+    def __getattr__(self, name):
+        if name in self.__dict__.get('buttons', {}):
+            return lambda: self.buttons[name]
+        raise AttributeError(name)
+    def dpad(self): return self._dpad
+
+
+class VisualNovelMode(unittest.TestCase):
+    def controller(self):
+        from PyQt6.QtWidgets import QApplication
+        QApplication.instance() or QApplication([])
+        from meikipop import controller as c
+        from unittest.mock import MagicMock
+        sm = MagicMock()
+        sm.get_scan_geometry.return_value = (100, 200, 400, 100)
+        ctl = c.ControllerInput.__new__(c.ControllerInput)
+        c.QObject.__init__(ctl)
+        ctl.shared_state, ctl.screen_manager, ctl.hit_scanner, ctl.popup = MagicMock(), sm, MagicMock(), MagicMock()
+        ctl.navigator = ControllerNavigator(lookup=None)
+        ctl.highlight = MagicMock()
+        ctl._prev, ctl._repeat, ctl._toggled_on, ctl._game_app, ctl._shown_token = {}, {}, False, None, None
+        pad = FakePad()
+        ctl.gamepad = MagicMock()
+        ctl.gamepad.pad.return_value = (None, pad)
+        return c, ctl, pad
+
+    def test_x_clicks_scan_area_centre_only_in_vn_mode(self):
+        from meikipop.config.config import config
+        from PyQt6.QtWidgets import QApplication
+        c, ctl, pad = self.controller()
+        with patch.object(c, 'click_at', return_value=True) as click, \
+             patch.object(config, 'vn_mode', True), patch.object(config, 'controller_enabled', True):
+            pad.buttons['buttonX'].down = True
+            ctl._poll()
+            QApplication.processEvents()
+            click.assert_called_once_with(300, 250)
+            ctl._poll()  # still held: no second click
+            QApplication.processEvents()
+            self.assertEqual(click.call_count, 1)
+        with patch.object(c, 'click_at') as click, \
+             patch.object(config, 'vn_mode', False), patch.object(config, 'controller_enabled', True):
+            pad.buttons['buttonX'].down = False
+            ctl._poll()
+            pad.buttons['buttonX'].down = True
+            ctl._poll()
+            QApplication.processEvents()
+            click.assert_not_called()
+
+
 if __name__ == '__main__':
     unittest.main()

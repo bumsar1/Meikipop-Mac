@@ -54,7 +54,8 @@ class Tests(unittest.TestCase):
         status._completed(({'食べる':'absent'}, {'食べる':0}))
         self.assertEqual(status.state('食べる'), 'present')
         status.cache['食べる'] = ('present', time.monotonic()-1)
-        self.assertEqual(status.state('食べる'), 'checking')
+        self.assertEqual(status.state('食べる'), 'present')  # stays visible while re-checked
+        self.assertTrue(status.needs_check('食べる'))
 
     def test_async_error_and_deduplication(self):
         status = AnkiStatus()
