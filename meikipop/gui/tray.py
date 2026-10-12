@@ -94,7 +94,7 @@ class TrayIcon(QSystemTrayIcon):
         block.setCheckable(True)
         block.setChecked(config.controller_block_game_input)
         block.triggered.connect(lambda on: self._set_pad('controller_block_game_input', on))
-        vn = pad_menu.addAction("Visual Novel Mode: X Advances Text")
+        vn = pad_menu.addAction("Visual Novel Mode (X Advances, Stick Moves Mouse)")
         vn.setCheckable(True)
         vn.setChecked(config.vn_mode)
         vn.triggered.connect(lambda on: self._set_pad('vn_mode', on))

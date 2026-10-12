@@ -21,25 +21,73 @@ REPEAT_DELAY, REPEAT_INTERVAL = 0.4, 0.15
 VN_RESCAN_DELAY_MS = 400  # let the game draw the next line before reading it
 
 
-def click_at(x, y) -> bool:
-    """Left-click at a global point in points, then put the cursor back. False without Accessibility access."""
+STICK_DEADZONE, POINTER_SPEED, SCROLL_INTERVAL = 0.2, 1100, 0.12  # speed in points per second
+
+
+def can_post_events(prompt=True) -> bool:
+    """Synthetic mouse input needs Accessibility access; asks macOS to prompt the first time."""
     if not IS_MACOS:
         return False
-    import Quartz
     from ApplicationServices import AXIsProcessTrustedWithOptions, kAXTrustedCheckOptionPrompt
-    if not AXIsProcessTrustedWithOptions({kAXTrustedCheckOptionPrompt: True}):
-        logger.warning("Visual novel mode needs Accessibility permission to click")
+    if AXIsProcessTrustedWithOptions({kAXTrustedCheckOptionPrompt: prompt}):
+        return True
+    logger.warning("Visual novel mode needs Accessibility permission to control the mouse")
+    return False
+
+
+def pointer_position():
+    import Quartz
+    p = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
+    return p.x, p.y
+
+
+def click_at(x, y, right=False, restore=True) -> bool:
+    """Click at a global point in points, optionally putting the cursor back. False without Accessibility access."""
+    if not can_post_events():
         return False
-    back = Quartz.CGEventGetLocation(Quartz.CGEventCreate(None))
+    import Quartz
+    back = pointer_position()
     point = Quartz.CGPointMake(x, y)
+    button = Quartz.kCGMouseButtonRight if right else Quartz.kCGMouseButtonLeft
+    down, up = ((Quartz.kCGEventRightMouseDown, Quartz.kCGEventRightMouseUp) if right
+                else (Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp))
     # Move first: many engines only accept a click on a choice they have seen hovered.
-    for kind in (Quartz.kCGEventMouseMoved, Quartz.kCGEventLeftMouseDown, Quartz.kCGEventLeftMouseUp):
-        event = Quartz.CGEventCreateMouseEvent(None, kind, point, Quartz.kCGMouseButtonLeft)
+    for kind in (Quartz.kCGEventMouseMoved, down, up):
+        event = Quartz.CGEventCreateMouseEvent(None, kind, point, button)
         Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
         time.sleep(0.05 if kind == Quartz.kCGEventMouseMoved else 0.02)
-    Quartz.CGWarpMouseCursorPosition(back)
-    Quartz.CGAssociateMouseAndMouseCursorPosition(True)
+    if restore:
+        Quartz.CGWarpMouseCursorPosition(Quartz.CGPointMake(*back))
+        Quartz.CGAssociateMouseAndMouseCursorPosition(True)
     return True
+
+
+def clamp_to_displays(x, y):
+    import Quartz
+    err, ids, n = Quartz.CGGetActiveDisplayList(16, None, None)
+    rects = [Quartz.CGDisplayBounds(i) for i in (ids or [])[:n]]
+    if not rects:
+        return x, y
+    def dist(r):
+        cx = min(max(x, r.origin.x), r.origin.x + r.size.width - 1)
+        cy = min(max(y, r.origin.y), r.origin.y + r.size.height - 1)
+        return (cx - x) ** 2 + (cy - y) ** 2, cx, cy
+    _, cx, cy = min(dist(r) for r in rects)
+    return cx, cy
+
+
+def move_pointer(x, y):
+    """Move the real cursor with a mouse-moved event, so games see the hover."""
+    import Quartz
+    x, y = clamp_to_displays(x, y)
+    event = Quartz.CGEventCreateMouseEvent(None, Quartz.kCGEventMouseMoved, Quartz.CGPointMake(x, y), Quartz.kCGMouseButtonLeft)
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
+
+
+def scroll(lines):
+    import Quartz
+    event = Quartz.CGEventCreateScrollWheelEvent(None, Quartz.kCGScrollEventUnitLine, 1, int(lines))
+    Quartz.CGEventPost(Quartz.kCGHIDEventTap, event)
 
 
 @dataclass(frozen=True)
@@ -320,9 +368,14 @@ class ControllerInput(QObject):
         pressed_b = self._edge('b', self._pressed(pad, 'buttonB'))
         pressed_x = self._edge('x', self._pressed(pad, 'buttonX'))
         pressed_y = self._edge('y', self._pressed(pad, 'buttonY'))
-        if pressed_x and config.vn_mode:
-            self.advance_text()
-            return
+        if config.vn_mode:
+            if pressed_x:
+                self.advance_text()
+                return
+            self._pointer(pad)
+            if not self.navigator.active and (pressed_a or pressed_b):
+                if can_post_events():
+                    click_at(*pointer_position(), right=pressed_b, restore=False)
         hold = self._pressed(pad, HOLD_BUTTONS.get(config.controller_hold_button, 'leftShoulder'))
         if config.controller_mode == 'toggle':
             if self._edge('hold', hold):
@@ -354,6 +407,37 @@ class ControllerInput(QObject):
             self._toggled_on = False
             self._stop()
         self._update_highlight()
+
+    def _pointer(self, pad):
+        """Left stick moves the mouse pointer; right stick up/down scrolls (e.g. the backlog)."""
+        now = time.monotonic()
+        dt = min(0.05, now - getattr(self, '_last_poll', now))
+        self._last_poll = now
+        stick = pad.leftThumbstick()
+        sx, sy = stick.xAxis().value(), stick.yAxis().value()
+        mag = (sx * sx + sy * sy) ** 0.5
+        if mag > STICK_DEADZONE and dt > 0:
+            # Squared response: small tilts for precise aiming, full tilt to cross the screen.
+            speed = POINTER_SPEED * ((mag - STICK_DEADZONE) / (1 - STICK_DEADZONE)) ** 2 * dt / mag
+            if self._pointer_allowed():
+                x, y = getattr(self, '_pointer_pos', None) or pointer_position()
+                x, y = clamp_to_displays(x + sx * speed, y - sy * speed)  # stick up is +y, screen up is -y
+                self._pointer_pos = (x, y)
+                move_pointer(x, y)
+        else:
+            self._pointer_pos = None  # re-read next time, in case the real mouse moved
+        ry = pad.rightThumbstick().yAxis().value()
+        if abs(ry) > 0.5 and now >= getattr(self, '_next_scroll', 0) and self._pointer_allowed():
+            self._next_scroll = now + SCROLL_INTERVAL
+            scroll(1 if ry > 0 else -1)
+
+    def _pointer_allowed(self):
+        # Checked at most every few seconds (it is polled 60 times a second), so a later grant is picked up.
+        now = time.monotonic()
+        if now >= getattr(self, '_ax_checked', 0):
+            self._ax_ok = can_post_events(prompt=not hasattr(self, '_ax_ok'))
+            self._ax_checked = now + (60 if self._ax_ok else 3)
+        return self._ax_ok
 
     def advance_text(self):
         """Visual novel mode: left-click the selected word (e.g. a dialogue choice) while looking up,

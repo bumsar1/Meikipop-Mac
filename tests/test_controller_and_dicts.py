@@ -173,11 +173,25 @@ class FakeButton:
     def isPressed(self): return self.down
 
 
+class FakeAxis:
+    def __init__(self): self.v = 0.0
+    def value(self): return self.v
+
+
+class FakeStick:
+    def __init__(self): self.x, self.y = FakeAxis(), FakeAxis()
+    def xAxis(self): return self.x
+    def yAxis(self): return self.y
+
+
 class FakePad:
     def __init__(self):
         self.buttons = {n: FakeButton() for n in ('buttonA', 'buttonB', 'buttonX', 'buttonY', 'leftShoulder')}
         dirs = {d: FakeButton() for d in ('left', 'right', 'up', 'down')}
         self._dpad = type('D', (), {d: (lambda self, b=b: b) for d, b in dirs.items()})()
+        self.left_stick, self.right_stick = FakeStick(), FakeStick()
+    def leftThumbstick(self): return self.left_stick
+    def rightThumbstick(self): return self.right_stick
     def __getattr__(self, name):
         if name in self.__dict__.get('buttons', {}):
             return lambda: self.buttons[name]
@@ -186,6 +200,16 @@ class FakePad:
 
 
 class VisualNovelMode(unittest.TestCase):
+    def setUp(self):
+        from meikipop import controller as c
+        for name, value in (('can_post_events', True), ('pointer_position', (500.0, 400.0))):
+            patcher = patch.object(c, name, return_value=value)
+            patcher.start()
+            self.addCleanup(patcher.stop)
+        patcher = patch.object(c, 'clamp_to_displays', side_effect=lambda x, y: (x, y))
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def controller(self):
         from PyQt6.QtWidgets import QApplication
         QApplication.instance() or QApplication([])
@@ -244,6 +268,31 @@ class VisualNovelMode(unittest.TestCase):
         x, y = click.call_args[0]
         self.assertAlmostEqual(x, 100 + 0.15 * 400)  # centre of 青空 (0.1–0.2 of the width)
         self.assertAlmostEqual(y, 200 + 0.6 * 100)
+
+
+    def test_stick_moves_pointer_and_a_b_click_there(self):
+        from meikipop.config.config import config
+        c, ctl, pad = self.controller()
+        with patch.object(c, 'move_pointer') as move, patch.object(c, 'click_at') as click, patch.object(c, 'scroll') as wheel, \
+             patch.object(config, 'vn_mode', True), patch.object(config, 'controller_enabled', True):
+            ctl._poll()  # establishes timing
+            pad.left_stick.x.v, pad.left_stick.y.v = 1.0, 1.0  # full tilt up-right
+            ctl._last_poll -= 0.02
+            ctl._poll()
+            x, y = move.call_args[0]
+            self.assertGreater(x, 500)
+            self.assertLess(y, 400)  # up on the stick is up on screen
+            pad.left_stick.x.v = pad.left_stick.y.v = 0.0
+            pad.buttons['buttonA'].down = True
+            ctl._poll()
+            click.assert_called_once_with(500.0, 400.0, right=False, restore=False)
+            pad.buttons['buttonA'].down = False
+            pad.buttons['buttonB'].down = True
+            ctl._poll()
+            self.assertEqual(click.call_args.kwargs['right'], True)
+            pad.right_stick.y.v = -1.0
+            ctl._poll()
+            wheel.assert_called_once_with(-1)
 
 
 if __name__ == '__main__':
