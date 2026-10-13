@@ -61,6 +61,10 @@ def run_gui():
     app.setQuitOnLastWindowClosed(False)
     app.aboutToQuit.connect(shared_state.game_audio.stop)
 
+    if not config.game_pid:  # couch-mode launches must not stop on a dialog
+        from meikipop.gui.permissions_dialog import check_at_startup
+        check_at_startup()
+
     input_loop = InputLoop(shared_state)
     popup_window = Popup(shared_state, input_loop)
 

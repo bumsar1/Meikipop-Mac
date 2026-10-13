@@ -6,9 +6,25 @@ A private backup of a customized Meikipop 2.0.5 for Apple Silicon, with Japanese
 
 Download **Meikipop-macOS.dmg** from [Releases](https://github.com/bumsar1/Meikipop-Mac/releases/latest), open it, and drag **Meikipop.app** onto the **Applications** shortcut. Eject the disk image and launch Meikipop from Applications. Quit the previous version before replacing it.
 
-The app runs in the menu bar. Choose **Quit** to exit or **Pause meikipop** to pause scanning and audio capture. macOS may request screen/audio recording and Accessibility permissions.
+The app runs in the menu bar. Choose **Quit** to exit or **Pause meikipop** to pause scanning and audio capture. Grant the permissions below before you play.
 
 The release includes Python, local OCR models, a dictionary, and the existing personal Anki field mapping. It is a private backup for the original Mac setup, not a general-purpose installer. Keep Anki with AnkiConnect and the browser with Yomitan API open. The separately installed Yomitan API component still uses the existing Python installation; this app does not install that component.
+
+## Permissions: grant everything before you play
+
+Do this once so no prompt interrupts a full-screen game. In **System Settings → Privacy & Security**, switch on:
+
+| App | Permission | Needed for |
+|---|---|---|
+| Meikipop | **Screen & System Audio Recording** | Reading text (OCR), window picture on Anki cards, game audio |
+| Meikipop | **Accessibility** | Visual novel mode: X/A/B clicks, moving the mouse with the stick |
+| VN Library | **Accessibility** | Putting games in full screen from couch mode |
+
+The easiest way is **Permissions…** in Meikipop's menu bar menu: it shows what's missing, opens the right Settings page, and can quit and reopen Meikipop (macOS only applies Screen Recording after a restart). Meikipop also shows it at startup when something is missing, except when started from couch mode.
+
+If a permission is switched on but still doesn't work: select the app in that list, remove it with **−**, add it again and switch it on, then quit and reopen the app.
+
+Meikipop is now signed with the same stable certificate as VN Library ("Keiko Dev"), so permissions survive updates. Older builds were signed ad hoc, so every build looked like a new app to macOS and permissions shown as on silently stopped working. After updating from an older version, remove the old Meikipop entries once and grant them again.
 
 ## Usage
 

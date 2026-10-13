@@ -82,6 +82,7 @@ class TrayIcon(QSystemTrayIcon):
 
         self.menu.addAction("Pronunciation Volume…").triggered.connect(self.show_pronunciation_volume)
         self.menu.addAction("Dictionaries…").triggered.connect(self.show_dictionaries)
+        self.menu.addAction("Permissions…").triggered.connect(self.show_permissions)
 
         self.controller = controller
         pad_menu = self.menu.addMenu("Controller")
@@ -235,6 +236,10 @@ class TrayIcon(QSystemTrayIcon):
                 config.save()
             except OSError as error:
                 QMessageBox.warning(None, "Could Not Save Volume", f"The volume changed for this session, but could not be saved: {error}")
+
+    def show_permissions(self):
+        from meikipop.gui.permissions_dialog import PermissionsDialog
+        PermissionsDialog().exec()
 
     def show_dictionaries(self):
         from meikipop.gui.dictionaries_dialog import DictionariesDialog

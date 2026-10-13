@@ -1,5 +1,24 @@
 MEIKIPOP WITH YOMITAN AND ANKI
 
+PERMISSIONS: GRANT EVERYTHING BEFORE YOU PLAY
+Do this once, before starting a game, so no permission prompt interrupts you in full screen.
+Open System Settings → Privacy & Security and switch on:
+
+  Meikipop
+  1. Screen & System Audio Recording: reading text (OCR), the window picture on Anki cards, game audio.
+  2. Accessibility: visual novel mode (X/A/B clicks, moving the mouse with the stick).
+
+  VN Library
+  3. Accessibility: putting games in full screen from couch mode.
+
+Easiest way: open Meikipop and choose Permissions… in the menu bar. It shows what is missing, opens the right Settings page for each item, and has a Quit & Reopen button. Meikipop also shows it at startup when something is missing (not when started from couch mode).
+
+After switching on Screen & System Audio Recording, quit and reopen Meikipop: macOS only applies it after a restart.
+
+Switched on but still not working? Select the app in that list, remove it with −, add it again with + (or click Open Settings in Permissions… again) and switch it on, then quit and reopen the app.
+
+Updates from 2.0.5-mac.20261013.2 on keep these permissions: Meikipop is now signed with the same stable certificate as VN Library ("Keiko Dev"). Before that, every new build looked like a new app to macOS, so permissions shown as on silently stopped working. When updating from an older version, remove the old Meikipop entries in both lists once and grant them again.
+
 INSTALLATION
 Open Meikipop-macOS.dmg and drag Meikipop.app onto Applications. Eject the disk image, then start Meikipop from Applications. A macOS .app is a folder bundle; the disk image keeps its files together for downloading.
 
@@ -35,8 +54,8 @@ Audio capture is off at every launch. It captures the application that owns the 
 The menu shows buffer status or capture errors. If the buffer is empty, silent, stale, or unavailable, card creation is blocked while game audio is enabled. Disable game audio to add cards without it.
 The buffer stays in memory for at most 30 seconds. Disabling capture, pausing, switching windows, or quitting clears it. Resuming or switching windows starts a fresh buffer if the option remains enabled.
 
-PERMISSIONS AND TROUBLESHOOTING
-macOS may request screen/audio recording and Accessibility permissions for Meikipop or its GameAudio helper. Permissions previously granted to Terminal may not apply to the app. Restart the app after granting permissions.
+TROUBLESHOOTING
+Permissions: see PERMISSIONS below. Permissions granted to Terminal do not apply to the app.
 Log file: ~/Library/Logs/Meikipop/app.log
 Anki, Yomitan, and the separate Yomitan API component remain external dependencies. That API component still uses the existing Python installation.
 

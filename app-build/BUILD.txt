@@ -9,7 +9,7 @@ python3 prepare.py
 PYTHONPATH=.. python3 -m PyInstaller --noconfirm Meikipop.spec
 xattr -rd com.apple.FinderInfo dist/Meikipop.app
 xattr -rd com.apple.ResourceFork dist/Meikipop.app
-codesign --force --deep --sign - dist/Meikipop.app
+codesign --force --deep --sign "Keiko Dev" dist/Meikipop.app   (or run ./build.sh, which does every step)
 codesign --verify --deep --strict dist/Meikipop.app
 
 prepare.py uses the existing OCR models in the Hugging Face cache and collects third-party licenses. The spec includes the local dictionary and mining-settings.json. You do not need to rebuild to use the release app.
