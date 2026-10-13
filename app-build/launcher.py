@@ -17,6 +17,9 @@ else:
     sys.stdout = sys.stderr = log.open('a', buffering=1)
 
 try:
+    import onnxruntime
+    # Its telemetry uploader thread can abort the process while the app quits.
+    onnxruntime.disable_telemetry_events()
     import meikiocr.ocr as engine
     def bundled_model(repo_id, filename):
         path = bundle / 'models' / filename

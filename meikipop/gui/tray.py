@@ -1,5 +1,7 @@
 # meikipop/gui/tray.py
+import logging
 import os
+import sys
 
 from PyQt6.QtCore import QTimer, Qt
 from PyQt6.QtGui import QIcon, QAction, QActionGroup
@@ -9,6 +11,24 @@ from meikipop.config.config import APP_NAME, config, IS_WINDOWS
 from meikipop.gui.settings_dialog import SettingsDialog
 from meikipop.ocr.ocr import OcrProcessor
 from meikipop.utils.paths import paths
+
+
+def _stop_qt_tray_menu_activation():
+    """Qt 6.9–6.11 crash on macOS 27 when the menu bar menu opens: Qt reads NSApp.currentEvent.clickCount
+    to emit 'activated', but the menu is now opened without a mouse event, so AppKit aborts. We don't
+    need 'activated' when the menu opens, so that callback becomes a no-op. Fixed upstream (qtbase dev)."""
+    if sys.platform != 'darwin':
+        return
+    try:
+        import objc
+        delegate = objc.lookUpClass('QStatusItemDelegate')
+
+        def statusItemMenuBeganTracking_(self, notification):
+            pass
+        objc.classAddMethods(delegate, [objc.selector(
+            statusItemMenuBeganTracking_, selector=b'statusItemMenuBeganTracking:', signature=b'v@:@')])
+    except Exception as e:
+        logging.getLogger(__name__).warning("Could not apply the menu bar crash workaround: %s", e)
 
 
 class TrayIcon(QSystemTrayIcon):
@@ -179,6 +199,7 @@ class TrayIcon(QSystemTrayIcon):
 
         self.menu.addAction("Quit").triggered.connect(QApplication.instance().quit)
 
+        _stop_qt_tray_menu_activation()
         self.setContextMenu(self.menu)
         self.setToolTip(APP_NAME)
 
