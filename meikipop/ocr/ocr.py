@@ -21,6 +21,8 @@ class OcrProcessor(threading.Thread):
         self.shared_state = shared_state
         self.screen_manager = screen_manager
         self.ocr_backend: Optional[OcrProvider] = None
+        from meikipop.read_log import ReadLog
+        self.read_log = ReadLog()
 
         self.available_providers = self._discover_providers()
         if not self.available_providers:
@@ -44,6 +46,8 @@ class OcrProcessor(threading.Thread):
                     f"{self.ocr_backend.NAME} found {len(ocr_result) if ocr_result else 0} paragraphs in {(time.perf_counter() - start_time):.3f}s.")
                 # todo keep last ocr result?
 
+                if ocr_result:
+                    self.read_log.record(ocr_result, getattr(self.screen_manager, 'capture_window_pid', None))
                 self.shared_state.hit_scan_queue.put(FrameParagraphs(
                     ocr_result, screenshot.info.get("mining_window_frame"),
                     screenshot.info.get("mining_window_error", "")))

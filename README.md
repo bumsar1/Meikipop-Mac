@@ -63,6 +63,10 @@ When VN Library starts a game from couch mode, it starts Meikipop with `--game-p
 
 Choose **Scan Area → Selected Window (Follows It)** in the menu bar. Meikipop then scans the window picked under **Select Window for Anki Screenshots…** and re-reads its position before every scan, so moving or resizing the window needs no new region. If the window is minimized, the last position is kept.
 
+## Read log for VN Library
+
+Meikipop appends recognised text to `~/Library/Application Support/meikipop/read-log/YYYY-MM-DD.jsonl`, one JSON line per OCR frame: `{"t": <unix time>, "pid": <game pid or null>, "lines": [<paragraph text>, …]}`, in reading order. Consecutive identical frames are skipped; nothing is logged while paused. VN Library reads it to count characters read. Turn it off under **Settings → Log recognised text for VN Library**.
+
 ## Shorter matches
 
 By default the popup lists only the word that was matched (地元), plus the kanji card. Turn on **Settings → Show Shorter Matches** to also list shorter words such as 地.

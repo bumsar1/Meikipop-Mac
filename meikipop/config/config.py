@@ -45,7 +45,8 @@ class Config:
             'controller_hold_button': 'LB',
             'controller_mode': 'hold',
             'controller_block_game_input': True,
-            'vn_mode': False
+            'vn_mode': False,
+            'log_read_text': True
         },
         'Theme': {
             'theme_name': 'Nazeka',

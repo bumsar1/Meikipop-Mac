@@ -126,6 +126,12 @@ class SettingsDialog(QDialog):
             "Prevents auto ocr to occur, if mouse is not moved\nCan reduce system load, but worsen perceived latency")
         auto_layout.addRow(self.auto_scan_mouse_move_check_label, self.auto_scan_mouse_move_check)
 
+        self.log_read_text_check = QCheckBox()
+        self.log_read_text_check.setChecked(config.log_read_text)
+        self.log_read_text_check.setToolTip("Saves recognised text to read-log/ in Meikipop's data folder,\n"
+                                            "so VN Library can count characters read.")
+        auto_layout.addRow("Log recognised text for VN Library (characters read):", self.log_read_text_check)
+
         self.auto_scan_interval_spin_label = QLabel("Scan Interval (Cooldown):")
         self.auto_scan_interval_spin = QDoubleSpinBox()
         self.auto_scan_interval_spin.setRange(0.0, 60.0)
@@ -432,6 +438,7 @@ class SettingsDialog(QDialog):
         config.auto_scan_interval_seconds = self.auto_scan_interval_spin.value()
         config.auto_scan_mode_lookups_without_hotkey = self.auto_scan_no_hotkey_check.isChecked()
         config.auto_scan_on_mouse_move = self.auto_scan_mouse_move_check.isChecked()
+        config.log_read_text = self.log_read_text_check.isChecked()
 
         if IS_WINDOWS:
             config.magpie_compatibility = self.magpie_check.isChecked()

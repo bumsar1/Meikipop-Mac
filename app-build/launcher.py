@@ -82,6 +82,8 @@ try:
     else:
         from meikipop.main import main
         main()
+except SystemExit as done:
+    exit_code = done.code if isinstance(done.code, int) else 0
 except Exception:
     traceback.print_exc()
     if not self_test:
@@ -89,3 +91,13 @@ except Exception:
         app = QApplication.instance() or QApplication([])
         QMessageBox.critical(None, 'Meikipop could not start', f'An error occurred. The log file is here:\n{log}\n\n{traceback.format_exc()[-1200:]}')
     raise
+else:
+    exit_code = 0
+
+# Leave without running C++ static destructors: ONNX Runtime's telemetry uploader thread can
+# still be running and aborts the process ("recursive_mutex lock failed") while they run.
+import logging
+logging.shutdown()
+sys.stdout.flush()
+sys.stderr.flush()
+os._exit(exit_code)
