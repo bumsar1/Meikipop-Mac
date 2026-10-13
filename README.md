@@ -39,6 +39,10 @@ Words are split by the longest dictionary match, the same way Shift lookups pick
 
 Choose **Dictionaries…** in the menu bar and add Yomitan dictionary `.zip` files (for example a monolingual or name dictionary). They are added on top of the built-in JMdict and are labelled with their name in the popup. Kanji and frequency-only dictionaries are not supported. Installed dictionaries live in `~/Library/Application Support/meikipop/user_dicts`.
 
+## Starting from VN Library couch mode
+
+When VN Library starts a game from couch mode, it starts Meikipop with `--game-pid <pid>` (or, if Meikipop is already running, sends it the game). Meikipop then skips the window and region dialogs, waits for that game's window, including one in its own full-screen Space, and scans the whole window. Nothing is saved to your settings; a normal start still asks as before.
+
 ## Scan area that follows the game
 
 Choose **Scan Area → Selected Window (Follows It)** in the menu bar. Meikipop then scans the window picked under **Select Window for Anki Screenshots…** and re-reads its position before every scan, so moving or resizing the window needs no new region. If the window is minimized, the last position is kept.

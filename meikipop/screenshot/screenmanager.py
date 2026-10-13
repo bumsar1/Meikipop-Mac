@@ -5,7 +5,7 @@ import time
 import sys
 
 from PIL import Image
-from .window_capture import capture_window, window_bounds
+from .window_capture import capture_window, window_bounds, find_game_window
 
 from meikipop.config.config import config, IS_WAYLAND
 from meikipop.gui.region_selector import RegionSelector
@@ -38,6 +38,11 @@ class ScreenManager(threading.Thread):
         self.capture_window_pid = None
         self.capture_window_label = ""
         self.follow_window = False
+        self.game_pid = None  # set when a launcher (VN Library couch mode) hands us the game
+        if config.game_pid:
+            # Launched for a specific game: no dialogs; the window is found once it exists.
+            self.follow_game(config.game_pid)
+            return
         if not self.select_capture_window():
             sys.exit(0)
         if config.scan_region == "region":
@@ -63,6 +68,12 @@ class ScreenManager(threading.Thread):
                 self.shared_state.screenshot_trigger_event.wait()
                 self.shared_state.screenshot_trigger_event.clear()
                 if not self.shared_state.running: break
+                if self.follow_window:
+                    self._follow_capture_window()
+                if self.monitor is None:  # still waiting for the game window
+                    time.sleep(0.5)
+                    self.shared_state.screenshot_trigger_event.set()
+                    continue
                 logger.debug("Screenshot: Triggered!")
 
                 # prevent multiple ocr runs during auto_scan_interval_seconds
@@ -127,21 +138,36 @@ class ScreenManager(threading.Thread):
             choice = WindowSelector.choose(self.capture_window_id)
             if choice is None:
                 return False
-            self.capture_window_id = choice['id']
-            self.capture_window_pid = choice['pid']
-            self.capture_window_label = choice['app'] + (' — ' + choice['title'] if choice['title'] else '')
-            self.shared_state.capture_window_id = self.capture_window_id
-            audio = getattr(self.shared_state, "game_audio", None)
-            if audio is not None:
-                if config.is_enabled:
-                    audio.start(self.capture_window_pid, self.capture_window_id)
-                else:
-                    audio.stop()
-            self.force_screenshot_trigger()
-            self.shared_state.hit_scan_queue.put(None)
-            self.shared_state.screenshot_trigger_event.set()
-            logger.info('Anki image window: %s (ID %s)', self.capture_window_label, self.capture_window_id)
+            self.game_pid = None
+            self._use_window(choice)
             return True
+
+    def follow_game(self, pid):
+        """Track the game started as pid: pick its window as soon as it appears and scan all of it."""
+        logger.info("Following game process %s", pid)
+        self.game_pid = int(pid)
+        self.follow_window = True
+        self.capture_window_id = None
+        self.monitor = None
+        self._follow_capture_window()
+        self.force_screenshot_trigger()
+        self.shared_state.screenshot_trigger_event.set()
+
+    def _use_window(self, choice):
+        self.capture_window_id = choice['id']
+        self.capture_window_pid = choice['pid']
+        self.capture_window_label = choice['app'] + (' — ' + choice['title'] if choice['title'] else '')
+        self.shared_state.capture_window_id = self.capture_window_id
+        audio = getattr(self.shared_state, "game_audio", None)
+        if audio is not None:
+            if config.is_enabled:
+                audio.start(self.capture_window_pid, self.capture_window_id)
+            else:
+                audio.stop()
+        self.force_screenshot_trigger()
+        self.shared_state.hit_scan_queue.put(None)
+        self.shared_state.screenshot_trigger_event.set()
+        logger.info('Anki image window: %s (ID %s)', self.capture_window_label, self.capture_window_id)
 
     def set_scan_window(self):
         """Scan the selected window wherever it is; its position is re-read before every screenshot."""
@@ -152,6 +178,12 @@ class ScreenManager(threading.Thread):
 
     def _follow_capture_window(self):
         bounds = window_bounds(self.capture_window_id) if self.capture_window_id else None
+        if bounds is None and self.game_pid:
+            # First look, or the game replaced its window (e.g. going full screen).
+            found = find_game_window(self.game_pid)
+            if found is not None and found['id'] != self.capture_window_id:
+                self._use_window(found)
+                bounds = window_bounds(found['id'])
         if bounds is None:
             logger.debug("Selected window not on screen; keeping the last scan area")
             return

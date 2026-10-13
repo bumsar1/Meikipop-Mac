@@ -285,20 +285,9 @@ class WordHighlight(QWidget):
         self.setGeometry(int(x - pad), int(y - pad), int(w + 2 * pad), int(h + 2 * pad))
         if not self.isVisible():
             self.show()
-            self._exclude_from_capture()
+            from meikipop.gui.overlay import float_over_fullscreen
+            float_over_fullscreen(self, hide_from_capture=True)
         self.update()
-
-    def _exclude_from_capture(self):
-        from PyQt6.QtGui import QGuiApplication
-        if not IS_MACOS or QGuiApplication.platformName() != 'cocoa':
-            return
-        try:  # keep the outline out of OCR screenshots and Anki images
-            import objc
-            from AppKit import NSWindowSharingNone
-            view = objc.objc_object(c_void_p=int(self.winId()))
-            view.window().setSharingType_(NSWindowSharingNone)
-        except Exception as e:
-            logger.debug("Could not exclude highlight from capture: %s", e)
 
     def paintEvent(self, event):
         p = QPainter(self)

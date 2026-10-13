@@ -73,6 +73,8 @@ def run_gui():
     hit_scanner.navigator = ControllerNavigator(lookup)
     controller = ControllerInput(shared_state, screen_manager, hit_scanner, popup_window, hit_scanner.navigator)
     popup_window.controller = controller
+    from meikipop.game_handoff import listen_for_game_handoff
+    handoff = listen_for_game_handoff(screen_manager)
     tray_icon = TrayIcon(screen_manager, ocr_processor, popup_window, input_loop, lookup, controller)
 
     for t in [lookup, hit_scanner, ocr_processor, screen_manager, input_loop]:
@@ -109,6 +111,7 @@ def main():
         prog="meikipop",
         description="Universal Japanese OCR popup dictionary"
     )
+    parser.add_argument("--game-pid", type=int, help="Use this game's window and scan all of it (set by VN Library couch mode)")
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
 
     subparsers.add_parser("build-dict", help="Build the dictionary from source files")
@@ -119,7 +122,9 @@ def main():
     import_text_parser = subparsers.add_parser("import-yomitan-dict-text", help="Import Yomitan dictionary (text format)")
     import_text_parser.add_argument("dictionary_files", nargs='+', help="Path(s) to the dictionary zip file(s)")
 
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()  # macOS may add its own launch arguments
+    if args.game_pid and args.game_pid > 0:
+        config.game_pid = args.game_pid
 
     if args.command == "build-dict":
         from meikipop.scripts.build_dictionary import main as build_main

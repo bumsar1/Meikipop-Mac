@@ -610,6 +610,8 @@ class Popup(QWidget):
 
         self._store_active_window_on_mac()
         self.show()
+        from meikipop.gui.overlay import float_over_fullscreen
+        float_over_fullscreen(self)  # Qt resets the level on every show
         if IS_MACOS:
             self.raise_()
 

@@ -70,6 +70,43 @@ def list_windows():
     return result
 
 
+def process_tree(pid):
+    """pid plus all its descendants (a launcher shell -> wine -> the game)."""
+    import subprocess
+    pids, todo = [], [int(pid)]
+    while todo:
+        p = todo.pop()
+        pids.append(p)
+        try:
+            out = subprocess.run(['/usr/bin/pgrep', '-P', str(p)], capture_output=True, text=True, timeout=2).stdout
+        except Exception:
+            out = ''
+        todo.extend(int(c) for c in out.split() if c.isdigit() and int(c) not in pids)
+    return pids
+
+
+def find_game_window(pid):
+    """The largest normal window owned by pid or its children, on any desktop (including a
+    full-screen Space that is not currently shown). Returns a list_windows()-style dict or None."""
+    import Quartz
+    pids = set(process_tree(pid))
+    windows = Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListOptionAll, Quartz.kCGNullWindowID)
+    best = None
+    for window in windows or []:
+        bounds = window.get('kCGWindowBounds', {})
+        w, h = bounds.get('Width', 0), bounds.get('Height', 0)
+        if (window.get('kCGWindowOwnerPID') not in pids or window.get('kCGWindowLayer') != 0 or
+                w < 200 or h < 150 or window.get('kCGWindowAlpha', 1) <= 0):
+            continue
+        if best is None or w * h > best[0]:
+            best = (w * h, {'id': int(window['kCGWindowNumber']),
+                            'pid': int(window['kCGWindowOwnerPID']),
+                            'app': str(window.get('kCGWindowOwnerName', 'Game')),
+                            'title': str(window.get('kCGWindowName', '')),
+                            'bounds': dict(bounds)})
+    return best[1] if best else None
+
+
 def window_bounds(window_id):
     """Global (left, top, width, height) of the window in points; None if it is not on screen."""
     import Quartz

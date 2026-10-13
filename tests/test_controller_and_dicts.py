@@ -156,7 +156,7 @@ class FollowWindow(unittest.TestCase):
     def test_scan_area_tracks_window_and_keeps_last_when_hidden(self):
         from meikipop.screenshot import screenmanager
         sm = screenmanager.ScreenManager.__new__(screenmanager.ScreenManager)
-        sm.capture_window_id, sm.monitor, sm.follow_window = 42, None, True
+        sm.capture_window_id, sm.monitor, sm.follow_window, sm.game_pid = 42, None, True, None
         with patch.object(screenmanager, 'window_bounds', return_value=(100, 50, 800, 600)):
             sm._follow_capture_window()
         self.assertEqual(sm.get_scan_geometry(), (100, 50, 800, 600))
@@ -166,6 +166,27 @@ class FollowWindow(unittest.TestCase):
         with patch.object(screenmanager, 'window_bounds', return_value=None):  # minimized
             sm._follow_capture_window()
         self.assertEqual(sm.get_scan_geometry(), (300, 80, 800, 600))
+
+
+    def test_follows_game_process_and_finds_replacement_window(self):
+        from meikipop.screenshot import screenmanager
+        sm = screenmanager.ScreenManager.__new__(screenmanager.ScreenManager)
+        sm.capture_window_id, sm.monitor, sm.follow_window, sm.game_pid = None, None, True, 500
+        used = []
+        sm._use_window = lambda w: (used.append(w['id']), setattr(sm, 'capture_window_id', w['id']))
+        game = {'id': 7, 'pid': 501, 'app': 'Game', 'title': '', 'bounds': {}}
+        with patch.object(screenmanager, 'find_game_window', return_value=None):
+            sm._follow_capture_window()  # game window not open yet
+        self.assertIsNone(sm.monitor)
+        with patch.object(screenmanager, 'find_game_window', return_value=game), \
+             patch.object(screenmanager, 'window_bounds', side_effect=lambda wid: (0, 0, 1800, 1169) if wid == 7 else None):
+            sm._follow_capture_window()
+            self.assertEqual((used, sm.get_scan_geometry()), ([7], (0, 0, 1800, 1169)))
+            game2 = dict(game, id=8)  # the game swapped its window, e.g. for full screen
+            with patch.object(screenmanager, 'find_game_window', return_value=game2), \
+                 patch.object(screenmanager, 'window_bounds', side_effect=lambda wid: (0, 39, 1800, 1130) if wid == 8 else None):
+                sm._follow_capture_window()
+        self.assertEqual((used, sm.get_scan_geometry()), ([7, 8], (0, 39, 1800, 1130)))
 
 
 class FakeButton:

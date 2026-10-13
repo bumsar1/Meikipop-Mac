@@ -97,6 +97,7 @@ class Config:
                 setattr(self, key, val)
 
         self.is_enabled = True
+        self.game_pid = None  # session only: the game a launcher started us for (--game-pid)
         if found:
             logger.info(f"Configuration loaded from '{CONFIG_PATH}'.")
         else:

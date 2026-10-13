@@ -76,3 +76,6 @@ Choose Dictionaries… in the menu bar and add Yomitan dictionary .zip files. Th
 
 SHORTER MATCHES
 The popup lists only the matched word (e.g. 地元) plus the kanji card. Turn on Settings → Show Shorter Matches to also list shorter words such as 地.
+
+STARTING FROM VN LIBRARY COUCH MODE
+When VN Library starts a game from couch mode, Meikipop skips the window and region dialogs. It finds the game's window by itself, including in full screen, and scans the whole window. If Meikipop is already open, it switches to the new game. A normal start still asks as before.
