@@ -1,14 +1,13 @@
-New: **controller support**, **visual novel mode**, **extra dictionaries**, and a **scan area that follows the game window**.
+Bug fix release: **Meikipop no longer crashes when you open its menu bar menu** on macOS 27.
 
-- **Controller lookups:** hold **LB** and use the **D-pad** to move word to word and line to line. **A** adds the word to Anki. Settings are in the menu bar under **Controller**.
-- **Visual novel mode:** **X** advances text, or picks the outlined dialogue choice while LB is held. The **left stick** moves the mouse, **A/B** left/right-click (right-click usually opens Save/Load), and the **right stick** scrolls.
-- **Extra dictionaries:** **Dictionaries…** in the menu bar imports Yomitan `.zip` dictionaries on top of JMdict.
-- **Scan Area → Selected Window (Follows It):** no new region needed after moving the window.
-- The popup now shows only the matched word (地元, not 地); turn on **Settings → Show Shorter Matches** to get the old list back.
-- Fixed: the popup no longer flickers every five seconds while re-checking Anki.
+- Fixed: clicking the Meikipop icon in the menu bar could quit the app. This was a Qt bug on macOS 27 (Qt reads the click count of an event that is no longer a mouse click); the affected callback is now disabled.
+- Fixed: opening the menu bar menu no longer pauses or resumes Meikipop by itself.
+- Fixed: a rare crash when quitting, caused by ONNX Runtime's telemetry thread. Telemetry is now turned off.
 
-Download **Meikipop-macOS.dmg**, open it, and drag **Meikipop.app** onto **Applications**. Quit the previous version before replacing it. macOS may ask again for Screen Recording and Accessibility permissions; visual novel mode needs Accessibility.
+Includes everything from the previous release: controller lookups, visual novel mode, extra Yomitan dictionaries and the scan area that follows the game window.
+
+Download **Meikipop-macOS.dmg**, open it, and drag **Meikipop.app** onto **Applications**. Quit the previous version before replacing it. macOS may ask again for Screen Recording and Accessibility permissions.
 
 The private Anki configuration is retained. Anki, AnkiConnect, Yomitan, and the local Yomitan API component are still required. The app is not Apple-notarized.
 
-The packaged OCR/dictionary/audio/controller self-test passed. Controller navigation and dialogue choices were confirmed in real use; mouse pointer control was tested with a simulated controller. See Meikipop-START-HERE.txt for usage instructions.
+The packaged OCR/dictionary/audio/controller self-test passed. The crash cause was confirmed against the crash reports; the fix was tested in isolation, not by clicking the real menu bar. See Meikipop-START-HERE.txt for usage instructions.
