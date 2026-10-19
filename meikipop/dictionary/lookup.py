@@ -58,6 +58,8 @@ class Lookup(threading.Thread):
         if not self.dictionary.load_dictionary(DICT_PATH):
             raise RuntimeError("Failed to load dictionary.")
         self.deconjugator = Deconjugator(self.dictionary.deconjugator_rules)
+        from meikipop.yomitan_extras import YomitanExtras
+        self.extras = YomitanExtras()
 
     def clear_cache(self):
         self.lookup_cache = OrderedDict()
@@ -77,6 +79,8 @@ class Lookup(threading.Thread):
                 self.last_hit_result = context_key
 
                 lookup_result = self.lookup(hit_result) if hit_result else None
+                if lookup_result:
+                    self.extras.attach(lookup_result, hit_result)
                 self.popup_window.set_latest_data(lookup_result)
             except:
                 logger.exception("An unexpected error occurred in the lookup loop. Continuing...")

@@ -82,11 +82,20 @@ By default the popup lists only the word that was matched (地元), plus the kan
 
 Choose **Pronunciation Volume…** from the menu bar to adjust word pronunciation from 0% (muted) to 100%. The default is 50%, increased from the previous fixed 10%. Changes apply immediately and are saved when the dialog closes. This adjusts playback in Meikipop; it does not rewrite audio attached to Anki cards or change the game audio buffer.
 
+## Frequency lists and inflections
+
+Under each word the popup shows, like Yomitan:
+
+- **Inflections**, e.g. 書かれた → 🧩 passive « -た. Hover a tag to read what that form means and how it is built.
+- **Frequency lists** from your Yomitan dictionaries (JPDB, BCCWJ, ICR, Narou, VN, CC100, …), as name/rank badges.
+
+Both come from your own Yomitan through the local Yomitan API, so they match what Yomitan shows. They are fetched together with the lookup (about 25 ms), so the popup is drawn once. When Yomitan isn't running, the popup still works and shows Meikipop's own inflection names without explanations. Turn either off under **Settings → Show Frequency Lists (Yomitan)** / **Show Inflections**.
+
 ## Existing words in Anki
 
-Each word shows **Checking Anki…**, **✓ Already in Anki**, or **＋ Anki**. Existing words have no add link, while pronunciation playback remains available. The check matches the complete expression in the configured deck (including subdecks), using the dictionary headword for inflected text. It does not search the whole sentence or compare readings.
+Each word shows a coloured label: **Checking Anki…**, **✓ In Anki**, green **＋ Anki** (click to add), or orange **Anki offline · retry**. Existing words have no add link, while pronunciation playback remains available. The check matches the complete expression in the configured deck (including subdecks), using the dictionary headword for inflected text. It does not search the whole sentence or compare readings.
 
-Checks run in the background and are cached for up to five seconds. A successful addition updates the indicator immediately. **Anki unavailable · retry** means the status could not be verified. A fresh check before adding, plus Anki's existing duplicate validation, prevents stale status from being the only protection. Keep Anki and AnkiConnect running.
+Checks run in the background and are cached for up to five seconds. A successful addition updates the indicator immediately. **Anki offline · retry** means the status could not be verified. A fresh check before adding, plus Anki's existing duplicate validation, prevents stale status from being the only protection. Keep Anki and AnkiConnect running.
 
 ## Source and building
 

@@ -78,7 +78,7 @@ class Tests(unittest.TestCase):
         popup._mining_entries = [entry]
         popup.anki_status.mark_added('食べる')
         markup, _ = popup._calculate_content_and_size_char_count([entry])
-        self.assertIn('Already in Anki',markup)
+        self.assertIn('In Anki',markup)
         self.assertNotIn('href="mine:0"',markup)
         self.assertIn('href="audio:0"',markup)
         with patch('meikipop.mining.Miner.add') as add:

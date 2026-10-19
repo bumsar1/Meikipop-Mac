@@ -69,7 +69,7 @@ Yomitan API: https://github.com/yomidevs/yomitan-api
 Build instructions: app-build/BUILD.txt
 
 EXISTING WORD INDICATOR
-The word header shows Checking Anki… while a background check runs. Already in Anki replaces the add link when the complete expression exists in the configured deck or its subdecks. Pronunciation still works. New words show + Anki. Anki unavailable means verification failed, not that the word is new. Checks are refreshed in the background every few seconds; the last result stays visible meanwhile, so the popup does not flicker. Every addition is checked again before any media is uploaded.
+The word header shows a coloured label: Checking Anki… while a background check runs, green + Anki to add the word, orange Anki offline · retry when the check failed. ✓ In Anki replaces the add label when the complete expression exists in the configured deck or its subdecks. Pronunciation still works. New words show + Anki. Anki unavailable means verification failed, not that the word is new. Checks are refreshed in the background every few seconds; the last result stays visible meanwhile, so the popup does not flicker. Every addition is checked again before any media is uploaded.
 
 PRONUNCIATION VOLUME
 Choose Pronunciation Volume… from the menu bar. Adjust the slider between 0% (muted) and 100%. The default is now 50% instead of a fixed 10%. Changes apply immediately and are saved when you close the dialog. This affects word playback in Meikipop, not stored Anki media or game audio capture.
@@ -99,3 +99,6 @@ The popup lists only the matched word (e.g. 地元) plus the kanji card. Turn on
 
 STARTING FROM VN LIBRARY COUCH MODE
 When VN Library starts a game from couch mode, Meikipop skips the window and region dialogs. It finds the game's window by itself, including in full screen, and scans the whole window. If Meikipop is already open, it switches to the new game. A normal start still asks as before. In couch mode Meikipop keeps scanning even when the mouse doesn't move (Only Scan on Mouse Move is ignored there), so every new line is read and counted.
+
+FREQUENCY LISTS AND INFLECTIONS
+Under each word, the popup shows how it was inflected (e.g. 書かれた → passive « -た; hover a tag for its explanation) and the ranks from your Yomitan frequency dictionaries (JPDB, BCCWJ, ICR, Narou, VN, CC100, …). Both come from your own Yomitan, so keep Yomitan running. Without it, the popup still works. Turn them off under Settings → Show Frequency Lists (Yomitan) / Show Inflections.

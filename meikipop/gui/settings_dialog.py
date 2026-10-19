@@ -210,6 +210,16 @@ class SettingsDialog(QDialog):
         self.show_frequency_check.setChecked(config.show_frequency)
         vocab_layout.addRow("Show Frequency:", self.show_frequency_check)
 
+        self.show_freq_lists_check = QCheckBox()
+        self.show_freq_lists_check.setChecked(config.show_frequency_lists)
+        self.show_freq_lists_check.setToolTip("Frequency lists from your Yomitan dictionaries (JPDB, BCCWJ, …).\nNeeds Yomitan running.")
+        vocab_layout.addRow("Show Frequency Lists (Yomitan):", self.show_freq_lists_check)
+
+        self.show_inflections_check = QCheckBox()
+        self.show_inflections_check.setChecked(config.show_inflections)
+        self.show_inflections_check.setToolTip("How the word was inflected, e.g. passive « -た.\nHover a tag for its explanation.")
+        vocab_layout.addRow("Show Inflections:", self.show_inflections_check)
+
         self.show_shorter_check = QCheckBox()
         self.show_shorter_check.setChecked(config.show_shorter_matches)
         self.show_shorter_check.setToolTip("Also list shorter words, e.g. 地 under 地元")
@@ -448,6 +458,8 @@ class SettingsDialog(QDialog):
         config.show_pos = self.show_pos_check.isChecked()
         config.show_tags = self.show_tags_check.isChecked()
         config.show_frequency = self.show_frequency_check.isChecked()
+        config.show_frequency_lists = self.show_freq_lists_check.isChecked()
+        config.show_inflections = self.show_inflections_check.isChecked()
         if config.show_shorter_matches != self.show_shorter_check.isChecked():
             config.show_shorter_matches = self.show_shorter_check.isChecked()
             self.lookup.clear_cache()

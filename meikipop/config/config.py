@@ -61,6 +61,8 @@ class Config:
             'show_frequency': False,
             'show_kanji': True,
             'show_shorter_matches': False,
+            'show_frequency_lists': True,
+            'show_inflections': True,
             'show_examples': True,
             'show_components': True,
             'color_background': '#2E2E2E',

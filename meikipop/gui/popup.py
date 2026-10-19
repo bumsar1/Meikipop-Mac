@@ -8,7 +8,7 @@ from typing import List, Optional
 from PyQt6.QtCore import QTimer, QPoint, QSize, pyqtSignal
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QColor, QCursor, QFont, QFontMetrics, QFontInfo
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QApplication
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QLabel, QFrame, QApplication, QToolTip
 
 from meikipop.config.config import config, IS_MACOS
 from meikipop.dictionary.lookup import DictionaryEntry, KanjiEntry
@@ -22,6 +22,28 @@ if IS_MACOS:
         Quartz = None
 
 logger = logging.getLogger(__name__)
+CHIP_MUTED = '#3a3e4c'
+# state -> (label, background, text colour, clickable)
+ANKI_CHIPS = {'absent': ('＋ Anki', '#2f7a52', '#ffffff', True),
+              'present': ('✓ In Anki', CHIP_MUTED, '#8fd6a8', False),
+              'checking': ('Checking Anki…', CHIP_MUTED, '#aaaaaa', False),
+              'unknown': ('Anki offline · retry', '#8a5a1e', '#ffffff', True)}
+
+
+def chip(label, background, colour, href=None, size=13):
+    """A small coloured label (Qt rich text has no rounded corners, so these are flat)."""
+    body = f'<span style="background-color:{background}; color:{colour}; font-size:{size}px;">&nbsp;{label}&nbsp;</span>'
+    return f'<a href="{href}" style="text-decoration:none;">{body}</a>' if href else body
+
+
+def frequency_chip(name, value):
+    """Yomitan-style two-part badge: dictionary name, then its rank(s)."""
+    name = html.escape(name).replace(' ', '&nbsp;')
+    value = html.escape(value).replace(' ', '&nbsp;')
+    return (f'<span style="background-color:#4b4f7c; color:#ffffff; font-size:12px;">&nbsp;{name}&nbsp;</span>'
+            f'<span style="background-color:#23253a; color:#ffffff; font-size:12px;">&nbsp;{value}&nbsp;</span>')
+
+
 USER_GLOSS_LIMIT = 300  # extra dictionaries can carry whole encyclopedia paragraphs
 
 
@@ -97,6 +119,8 @@ class Popup(QWidget):
         self.display_label.setTextInteractionFlags(Qt.TextInteractionFlag.LinksAccessibleByMouse)
         self.display_label.setOpenExternalLinks(False)
         self.display_label.linkActivated.connect(self._mine_clicked)
+        self.display_label.linkHovered.connect(self._link_hovered)
+        self._link_tips = {}
         self.mining_finished.connect(self._mine_finished)
         self.mining_progress.connect(self.mining_status.setText)
         self.hide()
@@ -267,6 +291,13 @@ class Popup(QWidget):
         if self.is_visible and i is not None:
             self._mine_clicked(f'audio:{i}')
 
+    def _link_hovered(self, link):
+        tip = self._link_tips.get(link)
+        if tip:
+            QToolTip.showText(QCursor.pos(), tip, self.display_label)
+        else:
+            QToolTip.hideText()
+
     def _check_anki_status(self):
         if not self.is_visible or self._mining_busy:
             return
@@ -405,6 +436,7 @@ class Popup(QWidget):
 
         all_html_parts = []
         max_ratio = 0.0
+        self._link_tips = {}
 
         for i, entry in enumerate(entries):
             if i > 0:
@@ -421,28 +453,40 @@ class Popup(QWidget):
                 all_html_parts.append(self._render_kanji_entry(entry))
                 continue
 
-            header_text_calc = entry.written_form + " ✓ Already in Anki ▶"
-            if entry.reading: header_text_calc += f" [{entry.reading}]"
-            header_ratio = len(header_text_calc) / self.header_chars_per_line
-            max_ratio = max(max_ratio, header_ratio)
+            state = self.anki_status.state(entry.written_form or entry.reading)
+            header_text_calc = f"{entry.written_form} {entry.reading or ''}  {ANKI_CHIPS[state][0]}  ▶"
+            max_ratio = max(max_ratio, len(header_text_calc) / self.header_chars_per_line)
 
             # --- HTML construction ---
-            state = self.anki_status.state(entry.written_form or entry.reading)
-            badge = {'present': '✓ Already in Anki', 'checking': 'Checking Anki…',
-                     'unknown': 'Anki unavailable · retry', 'absent': '＋ Anki'}[state]
-            word = html.escape(entry.written_form)
-            if state in ('present', 'checking'):
-                header_html = f'<span style="color:{config.color_highlight_word};font-size:{config.font_size_header}px;">{word}</span> <span style="color:#aaaaaa;font-size:14px;">{badge}</span>'
-            else:
-                header_html = f'<a href="mine:{i}" style="color:{config.color_highlight_word};font-size:{config.font_size_header}px;">{word}</a> <a href="mine:{i}" style="color:{config.color_highlight_reading};font-size:14px;">{badge}</a>'
-            header_html += f' <a href="audio:{i}" style="color:{config.color_highlight_reading};font-size:14px;">▶</a>'
-            if entry.reading: header_html += f' <span style="color: {config.color_highlight_reading}; font-size:{config.font_size_header - 2}px;">[{entry.reading}]</span>'
-            if entry.deconjugation_process and config.show_deconjugation:
-                deconj_str = " ← ".join(p for p in entry.deconjugation_process if p)
-                if deconj_str:
-                    header_html += f' <span style="color:{config.color_foreground}; font-size:{config.font_size_definitions - 2}px; opacity:0.8;">({deconj_str})</span>'
+            header_html = f'<span style="color:{config.color_highlight_word};font-size:{config.font_size_header}px;">{html.escape(entry.written_form)}</span>'
+            if entry.reading:
+                header_html += f' <span style="color:{config.color_highlight_reading};font-size:{config.font_size_header - 2}px;">{html.escape(entry.reading)}</span>'
+            label, bg, fg, clickable = ANKI_CHIPS[state]
+            header_html += '&nbsp;&nbsp;' + chip(label, bg, fg, f'mine:{i}' if clickable else None)
+            header_html += '&nbsp;' + chip('▶', CHIP_MUTED, config.color_highlight_reading, f'audio:{i}')
             if config.show_frequency and entry.freq < 999_999:
                 header_html += f' <span style="color:{config.color_foreground}; font-size:{config.font_size_definitions - 2}px; opacity:0.6;">#{entry.freq}</span>'
+
+            if config.show_inflections:
+                chains = getattr(entry, 'yomitan_inflections', None)
+                if not chains and entry.deconjugation_process:  # Yomitan not running: Meikipop's own names
+                    chains = [[(p, '') for p in entry.deconjugation_process if p]]
+                for chain in (chains or [])[:2]:
+                    if not chain:
+                        continue
+                    tags = []
+                    for name, description in chain:
+                        key = f'infl:{len(self._link_tips)}'
+                        self._link_tips[key] = f"<b>{html.escape(name)}</b><br>{html.escape(description).replace(chr(10), '<br>')}" if description else ''
+                        tags.append(f'<a href="{key}" style="color:{config.color_foreground};text-decoration:none;">{html.escape(name)}</a>')
+                    line = ' « '.join(tags)
+                    header_html += f'<br><span style="font-size:{config.font_size_definitions - 1}px; color:#9aa0b4;">🧩 {line}</span>'
+                    max_ratio = max(max_ratio, len(' « '.join(n for n, _ in chain)) / self.def_chars_per_line)
+
+            frequencies = getattr(entry, 'yomitan_frequencies', None) if config.show_frequency_lists else None
+            if frequencies:
+                header_html += '<br>' + ' '.join(frequency_chip(name, value) for name, value in frequencies)
+                max_ratio = max(max_ratio, sum(len(n) + len(v) + 4 for n, v in frequencies) / self.def_chars_per_line)
             def_text_parts_calc = []
             def_text_parts_html = []
             last_dict = None
@@ -462,6 +506,8 @@ class Popup(QWidget):
                 if source and source != last_dict:
                     sense_calc = f"[{source}] " + sense_calc
                     sense_html = f'<span style="color:{config.color_highlight_reading}; font-size:{config.font_size_definitions - 2}px;">[{html.escape(source)}]</span> ' + sense_html
+                    if idx > 0:  # each extra dictionary starts on its own line
+                        sense_html = '<br>' + sense_html
                 last_dict = source
                 if config.show_pos and pos_list:
                     pos_str = f' ({", ".join(pos_list)})'
@@ -488,7 +534,9 @@ class Popup(QWidget):
                     def_ratio = len(def_text_calc) / self.def_chars_per_line
                     max_ratio = max(max_ratio, def_ratio)
 
-            definitions_html_final = f'{" " if config.compact_mode else "<br>"}<span style="font-size:{config.font_size_definitions}px;">{full_def_text_html}</span>'
+            # Compact mode puts definitions after the word, unless tag/frequency lines came in between.
+            inline = config.compact_mode and '<br>' not in header_html
+            definitions_html_final = f'{" " if inline else "<br>"}<span style="font-size:{config.font_size_definitions}px;">{full_def_text_html}</span>'
             all_html_parts.append(f"{header_html}{definitions_html_final}")
 
         optimal_content_width = self.max_content_width * min(1.0, max_ratio)
