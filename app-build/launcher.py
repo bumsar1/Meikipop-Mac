@@ -64,6 +64,11 @@ try:
         import Quartz
         import pynput.mouse._darwin
         assert Quartz.CGWindowListCreateImage
+        from meikipop.screenshot.window_capture import WindowFrame
+        ctx = Quartz.CGBitmapContextCreate(None, 64, 32, 8, 0, Quartz.CGColorSpaceCreateDeviceRGB(),
+                                           Quartz.kCGImageAlphaPremultipliedFirst | Quartz.kCGBitmapByteOrder32Little)
+        card, ext = WindowFrame(Quartz.CGBitmapContextCreateImage(ctx), 1).card_image()
+        assert ext == 'webp' and card[8:12] == b'WEBP', 'WebP card pictures do not work in the app'
         from meikipop.controller import Gamepad
         assert Gamepad().available, 'Controller support missing'
         from ApplicationServices import AXIsProcessTrustedWithOptions

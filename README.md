@@ -63,6 +63,13 @@ When VN Library starts a game from couch mode, it starts Meikipop with `--game-p
 
 Choose **Scan Area → Selected Window (Follows It)** in the menu bar. Meikipop then scans the window picked under **Select Window for Anki Screenshots…** and re-reads its position before every scan, so moving or resizing the window needs no new region. If the window is minimized, the last position is kept.
 
+## Scanning and Anki pictures
+
+- With **Scan Area → Selected Window**, and always in couch mode, Meikipop reads the game window's own picture instead of the screen. Windows on top of the game are never read, and a game hidden on another desktop isn't read at all.
+- In couch mode, scanning continues without mouse movement; unchanged frames are skipped.
+- The **Picture** field gets a WebP scaled to at most 1600 px (about 100 KB). Full-resolution PNGs were 5–7 MB and made adding cards time out. The picture is only encoded when you add a card, not on every scan.
+- If Anki is closed when you add a card, Meikipop starts it in the background and waits for AnkiConnect.
+
 ## Read log for VN Library
 
 Meikipop appends recognised text to `~/Library/Application Support/meikipop/read-log/YYYY-MM-DD.jsonl`, one JSON line per OCR frame: `{"t": <unix time>, "pid": <game pid or null>, "lines": [<paragraph text>, …]}`, in reading order. Consecutive identical frames are skipped; nothing is logged while paused. VN Library reads it to count characters read. Turn it off under **Settings → Log recognised text for VN Library**.

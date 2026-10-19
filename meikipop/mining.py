@@ -5,6 +5,7 @@ import hashlib
 import html
 import json
 import re
+import time
 from pathlib import Path
 from urllib.parse import urlparse
 import requests
@@ -97,7 +98,8 @@ class Miner:
         frame = getattr(entry, 'mining_window_frame', None)
         if frame is None:
             raise MiningError('The window screenshot is missing. ' + getattr(entry, 'mining_window_error', '') + ' Select a window from the menu bar → Select Window for Anki Screenshots, then look up the word again.')
-        image_name = 'meikipop_window_' + frame.digest + '.png'
+        image_data, extension = frame.card_image()
+        image_name = 'meikipop_window_' + hashlib.sha256(image_data).hexdigest() + '.' + extension
 
         expected = next(f for f in self.anki_config['cardFormats'] if f['name'] == self.settings['formatName'])
         formats = self.yomitan('ankiCardFormats')
@@ -158,12 +160,40 @@ class Miner:
                  if m.get('ankiFilename') and m['ankiFilename'] in rendered]
         if '{audio}' in [f['value'] for f in templates.values()] and not fields.get('ExpressionAudio'):
             raise MiningError('Yomitan found no audio for the word. No card was created.')
-        media.append({"ankiFilename": image_name, "content": base64.b64encode(frame.png).decode("ascii")})
+        media.append({"ankiFilename": image_name, "content": base64.b64encode(image_data).decode("ascii")})
         if sentence_audio:
             media.append({'ankiFilename': audio_name, 'content': base64.b64encode(sentence_audio).decode('ascii')})
         return note, media
 
-    def add(self, entry):
+    ANKI_BUNDLE_ID = 'net.ankiweb.dtop'
+    ANKI_START_TIMEOUT = 45  # seconds; Anki can take a while to open a large collection
+
+    def ensure_anki(self, progress=lambda text: None):
+        """Start Anki in the background when it is closed, then wait until AnkiConnect answers."""
+        try:
+            self.anki('version')
+            return
+        except MiningError as e:
+            if not isinstance(e.__cause__, requests.ConnectionError):
+                raise
+        progress('Anki was closed. Starting Anki…')
+        import subprocess
+        # -g: open in the background, so a full-screen game keeps the screen.
+        if subprocess.run(['/usr/bin/open', '-g', '-b', self.ANKI_BUNDLE_ID], capture_output=True).returncode != 0:
+            raise MiningError('Anki is closed and could not be started. Open Anki and try again.')
+        deadline = time.monotonic() + self.ANKI_START_TIMEOUT
+        while time.monotonic() < deadline:
+            time.sleep(1)
+            try:
+                self.anki('version')
+                progress('Anki started. Adding the card…')
+                return
+            except MiningError:
+                continue
+        raise MiningError('Anki started, but AnkiConnect did not answer. Check that AnkiConnect is installed, then try again.')
+
+    def add(self, entry, progress=lambda text: None):
+        self.ensure_anki(progress)
         if self.word_exists(entry.written_form or entry.reading):
             raise MiningError('Already in your Anki deck. No card was created.')
         note, media = self.prepare(entry)

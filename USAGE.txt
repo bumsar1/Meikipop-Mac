@@ -36,11 +36,11 @@ App controls and messages are in English.
 
 ANKI FIELDS
 The existing private release creates an Expression card in the 日本語 deck using the Lapis note type. Yomitan supplies definitions, furigana, readings, word audio, pitch accent, and frequencies using the exported field mapping.
-Sentence contains the OCR text with the selected word highlighted, including inflected forms. MiscInfo is Meikipop. SelectionText is empty because no text was selected in a Yomitan popup. Picture contains a PNG of the selected game window. Other empty fields remain empty unless optional game audio fills SentenceAudio.
+Sentence contains the OCR text with the selected word highlighted, including inflected forms. MiscInfo is Meikipop. SelectionText is empty because no text was selected in a Yomitan popup. Picture contains a picture of the selected game window, scaled to at most 1600 pixels and saved as WebP (about 100 KB instead of a 5–7 MB full-resolution PNG, which made adding cards time out). Other empty fields remain empty unless optional game audio fills SentenceAudio.
 
 Yomitan API and AnkiConnect must be enabled. The local API component is started by Yomitan. Pronunciation downloads use your configured Yomitan audio sources.
 If the active profile, deck, note type, or field mapping differs from the saved configuration, the integration reports an error. Update mining-settings.json to match the new export.
-Duplicate checks and an in-progress guard protect against duplicate additions. The popup footer confirms success or explains the error.
+If Anki is closed when you add a card, Meikipop starts it in the background and adds the card once AnkiConnect answers. Duplicate checks and an in-progress guard protect against duplicate additions. The popup footer confirms success or explains the error.
 
 WINDOW CAPTURE
 The selected window is used explicitly, regardless of which application has keyboard focus. Check the preview before confirming it. You can select another window through the menu bar.
@@ -89,6 +89,7 @@ macOS asks for Accessibility permission the first time.
 
 SCAN AREA THAT FOLLOWS THE GAME
 Choose Scan Area → Selected Window (Follows It). Meikipop scans the selected game window and re-reads its position before every scan, so moving or resizing it needs no new region. The whole window is scanned, including any title bar.
+In this mode Meikipop reads the window's own picture, not the screen: windows covering the game are never read, and nothing is read while the game is hidden on another desktop or minimized.
 
 EXTRA DICTIONARIES
 Choose Dictionaries… in the menu bar and add Yomitan dictionary .zip files. They are added on top of the built-in JMdict and labelled with their name in the popup. They only add definitions to the matched word; duplicates are removed and very long definitions are shortened. Kanji and frequency-only dictionaries are not supported.
@@ -97,4 +98,4 @@ SHORTER MATCHES
 The popup lists only the matched word (e.g. 地元) plus the kanji card. Turn on Settings → Show Shorter Matches to also list shorter words such as 地.
 
 STARTING FROM VN LIBRARY COUCH MODE
-When VN Library starts a game from couch mode, Meikipop skips the window and region dialogs. It finds the game's window by itself, including in full screen, and scans the whole window. If Meikipop is already open, it switches to the new game. A normal start still asks as before.
+When VN Library starts a game from couch mode, Meikipop skips the window and region dialogs. It finds the game's window by itself, including in full screen, and scans the whole window. If Meikipop is already open, it switches to the new game. A normal start still asks as before. In couch mode Meikipop keeps scanning even when the mouse doesn't move (Only Scan on Mouse Move is ignored there), so every new line is read and counted.

@@ -1,14 +1,51 @@
 """Capture the explicitly selected window, independently of keyboard focus."""
-from dataclasses import dataclass
+from functools import cached_property
 import hashlib
+import io
+import itertools
 import os
 
+CARD_IMAGE_MAX_SIDE = 1600   # pixels; a Retina full-screen capture is ~3600 wide
+CARD_IMAGE_QUALITY = 80      # WebP: ~100 KB per card instead of a 5–7 MB PNG
 
-@dataclass(frozen=True)
+_serials = itertools.count(1)
+
+
 class WindowFrame:
-    png: bytes
-    digest: str
-    window_id: int
+    """One capture of the selected window, kept as the raw CGImage. Encoding is deferred
+    until something needs it (a new card, the selector preview), since it is costly and
+    most captures are never used."""
+
+    def __init__(self, image, window_id):
+        self.image = image
+        self.window_id = int(window_id)
+        self.digest = f"{self.window_id}-{next(_serials)}"  # identifies this capture, not its content
+
+    @cached_property
+    def pixels(self):
+        """(raw BGRA bytes, width, height, bytes per row)."""
+        import Quartz
+        data = Quartz.CGDataProviderCopyData(Quartz.CGImageGetDataProvider(self.image))
+        return (bytes(data), Quartz.CGImageGetWidth(self.image), Quartz.CGImageGetHeight(self.image),
+                Quartz.CGImageGetBytesPerRow(self.image))
+
+    def pil(self):
+        from PIL import Image
+        raw, w, h, stride = self.pixels
+        # CGWindowListCreateImage gives 32-bit little-endian premultiplied-first pixels: B, G, R, A in memory.
+        return Image.frombuffer('RGBA', (w, h), raw, 'raw', 'BGRA', stride, 1).convert('RGB')
+
+    @cached_property
+    def png(self):
+        return encode_png(self.image)
+
+    def card_image(self):
+        """(bytes, file extension) for the Anki Picture field: scaled down and WebP-compressed."""
+        image = self.pil()
+        image.thumbnail((CARD_IMAGE_MAX_SIDE, CARD_IMAGE_MAX_SIDE))
+        out = io.BytesIO()
+        image.save(out, 'WEBP', quality=CARD_IMAGE_QUALITY, method=4)
+        return out.getvalue(), 'webp'
 
 
 class FrameParagraphs(list):
@@ -136,5 +173,4 @@ def capture_window(window_id, expected_pid=None):
         Quartz.kCGWindowImageBoundsIgnoreFraming | Quartz.kCGWindowImageBestResolution)
     if image is None or Quartz.CGImageGetWidth(image) == 0:
         raise RuntimeError('macOS could not capture the window. Check Screen Recording permission for Meikipop (or Terminal when using the script), then restart Meikipop.')
-    png = encode_png(image)
-    return WindowFrame(png, hashlib.sha256(png).hexdigest(), int(window_id))
+    return WindowFrame(image, window_id)

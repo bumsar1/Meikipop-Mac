@@ -15,8 +15,20 @@ if IS_LINUX:
 elif IS_MACOS:
     import Quartz
     from AppKit import NSEvent
+    # Resolved here, on the main thread: PyObjC's lazy lookup of Quartz names is not thread-safe and
+    # failed in the input/screenshot threads (KeyError: 'CGDisplayPixelsHigh' inside pynput).
+    _CGEventCreate, _CGEventGetLocation = Quartz.CGEventCreate, Quartz.CGEventGetLocation
 else:
     import keyboard
+
+
+def mouse_position():
+    """Pointer position in global top-left points, correct on every display."""
+    if IS_MACOS:
+        p = _CGEventGetLocation(_CGEventCreate(None))
+        return p.x, p.y
+    with mouse.Controller() as mc:
+        return mc.position
 
 
 logger = logging.getLogger(__name__)
@@ -138,7 +150,6 @@ class InputLoop(threading.Thread):
     def __init__(self, shared_state):
         super().__init__(daemon=True, name="InputLoop")
         self.shared_state = shared_state
-        self.mouse_controller = mouse.Controller()
 
         self.hotkey_str = config.hotkey.lower()
         if IS_LINUX:
@@ -160,7 +171,7 @@ class InputLoop(threading.Thread):
                 time.sleep(0.1)
                 continue
             try:
-                current_mouse_pos = self.mouse_controller.position
+                current_mouse_pos = mouse_position()
                 try:
                     hotkey_is_pressed = self.keyboard_controller.is_hotkey_pressed()
                 except Exception:
@@ -212,7 +223,6 @@ class InputLoop(threading.Thread):
 
     @staticmethod
     def get_mouse_pos():
-        with mouse.Controller() as mc:
-            pos = mc.position
-            # Convert floats to integers for QPoint compatibility
-            return (int(pos[0]), int(pos[1]))
+        pos = mouse_position()
+        # Convert floats to integers for QPoint compatibility
+        return (int(pos[0]), int(pos[1]))

@@ -29,7 +29,6 @@ class ScreenManager(threading.Thread):
         self.monitor = None
         self.last_ocr_put_time = 0.0
         self.last_screenshot = None
-        self.last_window_digest = None
         self.window_frame = None
         self.window_error = ""
         self.last_mouse_pos = None
@@ -84,8 +83,10 @@ class ScreenManager(threading.Thread):
                     self._sleep_and_handle_loop_exit(config.auto_scan_interval_seconds - seconds_since_last_ocr)
                     continue
 
-                # prevent ocr runs without mouse movements for auto-on-mouse-move mode
-                if config.auto_scan_mode and config.auto_scan_on_mouse_move and self.last_mouse_pos == self.input_loop.get_mouse_pos():
+                # prevent ocr runs without mouse movements for auto-on-mouse-move mode; not when following a
+                # game from couch mode, where the mouse sits still and every new line should still be read
+                if config.auto_scan_mode and config.auto_scan_on_mouse_move and not self.game_pid \
+                        and self.last_mouse_pos == self.input_loop.get_mouse_pos():
                     continue
                 self.last_mouse_pos = self.input_loop.get_mouse_pos()
 
@@ -93,21 +94,20 @@ class ScreenManager(threading.Thread):
                 with self.shared_state.screen_lock:
                     logger.debug("...successfully acquired lock by screenmanager")
                     start_time = time.perf_counter()
-                    screenshot = self.take_screenshot()
+                    img, content = self.take_screenshot()
                 logger.debug("...successfully released lock by screenmanager")
-                processing_duration = time.perf_counter() - start_time
-                logger.debug(f"Screenshot {screenshot.size} complete in {processing_duration:.2f}s")
+                if img is None:  # the followed window is hidden (another Space, minimized): nothing to read
+                    self._sleep_and_handle_loop_exit(0.5)
+                    continue
+                logger.debug(f"Screenshot {img.size} complete in {time.perf_counter() - start_time:.2f}s")
 
-                window_digest = self.window_frame.digest if self.window_frame else self.window_error
-                if self.last_screenshot and self.last_screenshot.raw == screenshot.raw and window_digest == self.last_window_digest:
+                if self.last_screenshot is not None and self.last_screenshot == content:
                     logger.debug(f"Screen content didnt change... skipping ocr")
                     self._sleep_and_handle_loop_exit(0.1)
                     continue
 
-                self.last_window_digest = window_digest
-                self.last_screenshot = screenshot
+                self.last_screenshot = content
                 self.last_mouse_pos = self.input_loop.get_mouse_pos()
-                img = Image.frombytes("RGB", screenshot.size, screenshot.bgra, "raw", "BGRX")
                 img.info["mining_window_frame"] = self.window_frame
                 img.info["mining_window_error"] = self.window_error
                 self.shared_state.ocr_queue.put(img)
@@ -118,19 +118,26 @@ class ScreenManager(threading.Thread):
         logger.debug("Screenshot thread stopped.")
 
     def take_screenshot(self):
+        """(image to OCR or None, raw bytes for change detection). Also captures the window for Anki."""
         if self.follow_window:
             self._follow_capture_window()
+        self.window_frame = None
+        self.window_error = ""
+        try:
+            self.window_frame = capture_window(self.capture_window_id, self.capture_window_pid)
+        except Exception as e:
+            # OCR continues, but adding a card reports the missing image.
+            self.window_error = str(e)
+            logger.debug("Window capture unavailable: %s", e)
+        if self.follow_window:
+            # Read the window's own pixels: covering windows (and Meikipop's popup) never get read,
+            # and a game that is not on screen is not read at all.
+            if self.window_frame is None:
+                return None, None
+            return self.window_frame.pil(), self.window_frame.pixels[0]
         with mss.mss() as sct:
-            sct_img = sct.grab(self.monitor)
-            self.window_frame = None
-            self.window_error = ""
-            try:
-                self.window_frame = capture_window(self.capture_window_id, self.capture_window_pid)
-            except Exception as e:
-                # OCR continues, but adding a card reports the missing image.
-                self.window_error = str(e)
-                logger.debug("Window capture unavailable: %s", e)
-            return sct_img
+            shot = sct.grab(self.monitor)
+        return Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX"), shot.raw
 
     def select_capture_window(self):
         # Keep the screenshot thread from changing context while the dialog is open.

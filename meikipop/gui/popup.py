@@ -27,6 +27,7 @@ USER_GLOSS_LIMIT = 300  # extra dictionaries can carry whole encyclopedia paragr
 
 class Popup(QWidget):
     mining_finished = pyqtSignal(bool, str)
+    mining_progress = pyqtSignal(str)
     def __init__(self, shared_state, input_loop):
         super().__init__()
         self._latest_data = None
@@ -97,6 +98,7 @@ class Popup(QWidget):
         self.display_label.setOpenExternalLinks(False)
         self.display_label.linkActivated.connect(self._mine_clicked)
         self.mining_finished.connect(self._mine_finished)
+        self.mining_progress.connect(self.mining_status.setText)
         self.hide()
 
     def _apply_frame_stylesheet(self):
@@ -326,7 +328,7 @@ class Popup(QWidget):
         def work():
             from meikipop.mining import Miner
             try:
-                note_id = Miner().add(entry)
+                note_id = Miner().add(entry, self.mining_progress.emit)
                 self.mining_finished.emit(True, f"✓ Added to 日本語 · {entry.written_form}")
                 logger.info("Anki note created: %s", note_id)
             except Exception as e:

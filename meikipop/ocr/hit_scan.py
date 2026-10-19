@@ -45,6 +45,8 @@ class HitScanner(threading.Thread):
 
         mouse_x, mouse_y = magpie_manager.transform_raw_to_visual(self.input_loop.get_mouse_pos(), 1)
         mouse_off_x, mouse_off_y, img_w, img_h = self.screen_manager.get_scan_geometry()
+        if not img_w or not img_h:  # no scan area yet (e.g. still waiting for the game window)
+            return None
         relative_x = mouse_x - mouse_off_x
         relative_y = mouse_y - mouse_off_y
         norm_x, norm_y = relative_x / img_w, relative_y / img_h

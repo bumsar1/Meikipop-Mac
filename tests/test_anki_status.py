@@ -42,7 +42,8 @@ class Tests(unittest.TestCase):
         with self.assertRaisesRegex(MiningError, 'Already'):
             m.add(Mock(written_form='食べる', reading='たべる'))
         m.prepare.assert_not_called()
-        self.assertEqual(m.anki.call_count, 1)
+        # Only "is Anki running" and the duplicate search: nothing stored, no note added.
+        self.assertEqual([c.args[0] for c in m.anki.call_args_list], ['version', 'findNotes'])
 
     def test_error_is_not_absence(self):
         m = self.miner(); m.anki.side_effect = MiningError('Offline')
