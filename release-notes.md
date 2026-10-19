@@ -1,14 +1,16 @@
-New: **reliable Anki cards, reading only the game, and couch mode that counts every line**.
+New: **frequency lists and inflections in the popup, like Yomitan**, and a nicer Anki label.
 
-- **Anki cards no longer fail on the picture:** the Picture field is now a WebP scaled to at most 1600 px (about 100 KB) instead of a 5–7 MB full-resolution PNG. The large uploads timed out, and a third of card additions failed.
-- **Lighter scanning:** the card picture is only encoded when you add a card, not on every scan.
-- **Only the game is read:** with Scan Area → Selected Window, and always in couch mode, Meikipop reads the game window's own picture instead of the screen. Windows on top of the game are never read, and a game hidden on another desktop isn't read at all. This also keeps VN Library's characters-read count clean.
-- **Couch mode reads every line:** scanning continues without mouse movement; unchanged frames are skipped.
-- **Anki starts by itself:** if Anki is closed when you add a card, Meikipop opens it in the background (a full-screen game keeps the screen) and adds the card once AnkiConnect answers.
-- Fixed: error spam while waiting for the game window, and a startup race in reading the mouse position (now correct on every display).
+- **Inflections:** under each word, how it was inflected, e.g. 書かれた → 🧩 passive « -た, or 食べられなかった → potential or passive « negative « -た. Hover a tag to read what the form means and how it is built.
+- **Frequency lists:** the ranks from your Yomitan frequency dictionaries (JPDB, BCCWJ, ICR, Narou, VN, CC100, …), as name/rank badges.
+- **Anki label:** green **＋ Anki**, grey **✓ In Anki**, orange **Anki offline · retry**. The ▶ pronunciation button matches.
+- Extra dictionaries (e.g. daijirin) now start on their own line.
 
-Download **Meikipop-macOS.dmg**, open it, and drag **Meikipop.app** onto **Applications**. Quit the previous version before replacing it. Permissions from 2.0.5-mac.20261013.2 or later are kept; when updating from an older version, see the permissions section in Meikipop-START-HERE.txt.
+Both come from your own Yomitan through the local Yomitan API, fetched together with the lookup (about 25 ms), so the popup is drawn once and doesn't jump. Without Yomitan running, the popup still works and shows Meikipop's own inflection names. Turn them off under Settings → Show Frequency Lists (Yomitan) / Show Inflections.
+
+Also includes the previous release: smaller Anki pictures, game-only reading, couch scanning without mouse moves, and starting Anki automatically.
+
+Download **Meikipop-macOS.dmg**, open it, and drag **Meikipop.app** onto **Applications**. Quit the previous version before replacing it. Permissions from 2.0.5-mac.20261013.2 or later are kept.
 
 The private Anki configuration is retained. Anki, AnkiConnect, Yomitan, and the local Yomitan API component are still required. The app is not Apple-notarized.
 
-The packaged self-test passed, including WebP card pictures. Window-only reading and scanning without mouse movement were tested with a covered test game whose text changed while the mouse stood still. Card adding with the smaller picture was tested in unit tests, not yet with a real card. See Meikipop-START-HERE.txt for usage instructions.
+The packaged self-test passed. The popup was rendered with real Yomitan data (書かれた, 命じろ, 食べられなかった). Explanations need a mouse hover; they can't be opened with a controller yet. See Meikipop-START-HERE.txt for usage instructions.
