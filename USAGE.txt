@@ -25,7 +25,7 @@ Open Meikipop-macOS.dmg and drag Meikipop.app onto Applications. Eject the disk 
 GETTING STARTED
 1. Quit any previous Meikipop instance using Quit in its menu bar menu.
 2. Keep Anki with AnkiConnect and your browser with Yomitan open.
-3. Use the Bilingual profile for the existing release configuration.
+3. For Anki cards: copy mining-settings.example.json (in the repository) to ~/Library/Application Support/meikipop/mining-settings.json, and fill in your Yomitan profile, deck, note type and field mapping. Lookups work without it.
 4. Open Meikipop.app. Select the game window, request a preview, check it, and continue. Select the text region for OCR.
 5. Hold Shift over a word. Yomitan's pronunciation plays automatically.
 6. Keep holding Shift and move the pointer to the popup. Click the word or + Anki to add it. Click the play button to repeat its pronunciation.
@@ -38,7 +38,7 @@ The app remains in the menu bar. Use Quit to exit, Pause meikipop to pause scann
 App controls and messages are in English.
 
 ANKI FIELDS
-The existing private release creates an Expression card in the 日本語 deck using the Lapis note type. Yomitan supplies definitions, furigana, readings, word audio, pitch accent, and frequencies using the exported field mapping.
+Cards go to the deck and note type set in your mining-settings.json. Yomitan supplies definitions, furigana, readings, word audio, pitch accent, and frequencies using the exported field mapping.
 Sentence contains the OCR text with the selected word highlighted, including inflected forms. MiscInfo is Meikipop. SelectionText is empty because no text was selected in a Yomitan popup. Picture contains a picture of the selected game window, scaled to at most 1600 pixels and saved as WebP (about 100 KB instead of a 5–7 MB full-resolution PNG, which made adding cards time out). Other empty fields remain empty unless optional game audio fills SentenceAudio.
 
 Yomitan API and AnkiConnect must be enabled. The local API component is started by Yomitan. Pronunciation downloads use your configured Yomitan audio sources.
@@ -60,7 +60,7 @@ The buffer stays in memory for at most 30 seconds. Disabling capture, pausing, s
 TROUBLESHOOTING
 Permissions: see PERMISSIONS below. Permissions granted to Terminal do not apply to the app.
 Log file: ~/Library/Logs/Meikipop/app.log
-Anki, Yomitan, and the separate Yomitan API component remain external dependencies. That API component still uses the existing Python installation.
+Anki, Yomitan, and the separate Yomitan API component remain external dependencies. Install that component separately, following its own instructions.
 
 VALIDATION
 Packaged OCR, dictionary loading, provider discovery, Qt audio initialization, and Anki configuration loading passed. Shift behavior, window selection, buffer limits, menu controls, field mapping, duplicate protection, and simulated media uploads were tested. Native stereo float to mono PCM conversion passed with synthetic audio.
