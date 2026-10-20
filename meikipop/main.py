@@ -77,11 +77,16 @@ def run_gui():
     hit_scanner.navigator = ControllerNavigator(lookup)
     controller = ControllerInput(shared_state, screen_manager, hit_scanner, popup_window, hit_scanner.navigator)
     popup_window.controller = controller
+    from meikipop.texthook import EngineText
+    engine_text = EngineText(shared_state, read_log=ocr_processor.read_log)
+    engine_text.pid_source = lambda: screen_manager.capture_window_pid
+    engine_text.on_change = screen_manager.engine_text_changed
+    shared_state.engine_text = engine_text
     from meikipop.game_handoff import listen_for_game_handoff
     handoff = listen_for_game_handoff(screen_manager)
     tray_icon = TrayIcon(screen_manager, ocr_processor, popup_window, input_loop, lookup, controller)
 
-    for t in [lookup, hit_scanner, ocr_processor, screen_manager, input_loop]:
+    for t in [lookup, hit_scanner, ocr_processor, screen_manager, input_loop, engine_text]:
         t.start()
 
     ready_message = f"""

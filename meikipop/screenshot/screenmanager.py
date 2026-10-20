@@ -5,7 +5,7 @@ import time
 import sys
 
 from PIL import Image
-from .window_capture import capture_window, window_bounds, find_game_window
+from .window_capture import FrameParagraphs, capture_window, window_bounds, find_game_window
 
 from meikipop.config.config import config, IS_WAYLAND
 from meikipop.gui.region_selector import RegionSelector
@@ -38,6 +38,7 @@ class ScreenManager(threading.Thread):
         self.capture_window_label = ""
         self.follow_window = False
         self.game_pid = None  # set when a launcher (VN Library couch mode) hands us the game
+        self.showing_engine_text = False  # the hit scanner has engine text (texthook.py), not OCR
         if config.game_pid:
             # Launched for a specific game: no dialogs; the window is found once it exists.
             self.follow_game(config.game_pid)
@@ -69,6 +70,23 @@ class ScreenManager(threading.Thread):
                 if not self.shared_state.running: break
                 if self.follow_window:
                     self._follow_capture_window()
+                # A hooked engine says what it shows: over its text, look up without OCR.
+                frame = self.engine_frame()
+                if frame is not None:
+                    self.shared_state.hit_scan_queue.put(frame)
+                    self.showing_engine_text = True
+                    self.last_screenshot = None  # OCR again as soon as the pointer leaves the line
+                    self._sleep_and_handle_loop_exit(config.auto_scan_interval_seconds)
+                    continue
+                engine = getattr(self.shared_state, "engine_text", None)
+                if self.showing_engine_text:
+                    self.shared_state.hit_scan_queue.put(FrameParagraphs([]))
+                    self.showing_engine_text = False
+                if (engine is not None and engine.has_text() and config.auto_scan_mode
+                        and not getattr(self.input_loop, "hotkey_is_pressed", False)):
+                    # The game's lines come from the engine; OCR the rest (menus, choices) only on Shift.
+                    self._sleep_and_handle_loop_exit(0.1)
+                    continue
                 if self.monitor is None:  # still waiting for the game window
                     time.sleep(0.5)
                     self.shared_state.screenshot_trigger_event.set()
@@ -138,6 +156,30 @@ class ScreenManager(threading.Thread):
         with mss.mss() as sct:
             shot = sct.grab(self.monitor)
         return Image.frombytes("RGB", shot.size, shot.bgra, "raw", "BGRX"), shot.raw
+
+    def engine_frame(self):
+        """The hooked engine's text as OCR-style paragraphs when the pointer is on it, else None."""
+        engine = getattr(self.shared_state, "engine_text", None)
+        if engine is None:
+            return None
+        frame = engine.frame_at(self.input_loop.get_mouse_pos())
+        if frame is None:
+            return None
+        try:  # the Anki picture, as with OCR
+            frame.window_frame = capture_window(self.capture_window_id, self.capture_window_pid)
+        except Exception as e:
+            frame.window_error = str(e)
+        return frame
+
+    def engine_text_changed(self):
+        """A new line (or none): replace what the hit scanner has, without OCR."""
+        frame = self.engine_frame()
+        if frame is not None:
+            self.shared_state.hit_scan_queue.put(frame)
+            self.showing_engine_text = True
+        elif self.showing_engine_text:
+            self.shared_state.hit_scan_queue.put(FrameParagraphs([]))
+            self.showing_engine_text = False
 
     def select_capture_window(self):
         # Keep the screenshot thread from changing context while the dialog is open.

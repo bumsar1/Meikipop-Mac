@@ -44,7 +44,9 @@ class HitScanner(threading.Thread):
             return None
 
         mouse_x, mouse_y = magpie_manager.transform_raw_to_visual(self.input_loop.get_mouse_pos(), 1)
-        mouse_off_x, mouse_off_y, img_w, img_h = self.screen_manager.get_scan_geometry()
+        # Engine text (texthook.py) is laid out against the game image, not the OCR scan area.
+        mouse_off_x, mouse_off_y, img_w, img_h = getattr(paragraphs, "geometry", None) \
+            or self.screen_manager.get_scan_geometry()
         if not img_w or not img_h:  # no scan area yet (e.g. still waiting for the game window)
             return None
         relative_x = mouse_x - mouse_off_x
