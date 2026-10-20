@@ -31,6 +31,9 @@ GETTING STARTED
 6. Keep holding Shift and move the pointer to the popup. Click the word or + Anki to add it. Click the play button to repeat its pronunciation.
 7. Release Shift to hide the popup and stop pronunciation playback.
 
+ENGINE TEXT INSTEAD OF OCR
+Games started from VN Library with its Text hook switch on (siglus_engine with the hook, KiriKiri Player, BGI Player) send the text they show, with each character's position, to ws://127.0.0.1:6677. Meikipop connects to it on its own. Holding Shift over that text then looks the word up at once, without a screenshot or OCR, and the Anki sentence is the exact line. Menus and choices are still read with OCR when you hold Shift over them. While a game is hooked, OCR results are not written to the read log, so VN Library counts only the engine's lines. Games without the hook work as before.
+
 The app remains in the menu bar. Use Quit to exit, Pause meikipop to pause scanning and game audio, or the window selection action to choose a different game.
 App controls and messages are in English.
 
