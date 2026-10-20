@@ -30,8 +30,8 @@ class YomitanExtras:
     def _endpoint(self):
         if self._url is None:
             import requests
-            from meikipop.mining import SETTINGS
-            server = json.loads(SETTINGS.read_text())['yomitanServer'].rstrip('/')
+            from meikipop.mining import settings_path
+            server = json.loads(settings_path().read_text())['yomitanServer'].rstrip('/')
             self._session = requests.Session()
             self._session.trust_env = False
             self._url = server + '/termEntries'

@@ -3,7 +3,9 @@
 set -e
 cd "$(dirname "$0")"
 PY=/Library/Frameworks/Python.framework/Versions/3.13/bin/python3.13
-[ -f ../mining-settings.json ] || cp /Applications/Meikipop.app/Contents/Resources/mining-settings.json ..
+# The app bundles the neutral example; personal mappings live in
+# ~/Library/Application Support/meikipop/mining-settings.json.
+mkdir -p build/bundled && cp ../mining-settings.example.json build/bundled/mining-settings.json
 xcrun swiftc -O -swift-version 5 -target arm64-apple-macosx13.0 ../native/GameAudio.swift -o ../native/GameAudio
 $PY prepare.py >/dev/null
 PYTHONPATH=.. $PY -m PyInstaller --noconfirm Meikipop.spec > build/meikipop-build.log 2>&1

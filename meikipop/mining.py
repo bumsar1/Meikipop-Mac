@@ -10,7 +10,19 @@ from pathlib import Path
 from urllib.parse import urlparse
 import requests
 
-SETTINGS = Path(__file__).resolve().parent.parent / 'mining-settings.json'
+# The bundled file is a neutral example; your own Anki/Yomitan mapping goes in
+# ~/Library/Application Support/meikipop/mining-settings.json and wins.
+BUNDLED_SETTINGS = Path(__file__).resolve().parent.parent / 'mining-settings.json'
+
+
+def user_settings_path():
+    from meikipop.utils.paths import paths
+    return Path(paths.data_dir) / 'mining-settings.json'
+
+
+def settings_path():
+    user = user_settings_path()
+    return user if user.exists() else BUNDLED_SETTINGS
 MARKER = re.compile(r'\{([^{}]+)\}')
 
 class MiningError(RuntimeError):
@@ -46,7 +58,7 @@ def render_fields(templates, values):
 
 class Miner:
     def __init__(self, settings=None):
-        self.settings = settings or json.loads(SETTINGS.read_text())
+        self.settings = settings or json.loads(settings_path().read_text())
         self.anki_config = self.settings['anki']
         self.session = requests.Session()
         self.session.trust_env = False
@@ -149,6 +161,10 @@ class Miner:
         if set(fields) - set(actual):
             raise MiningError('The Anki note type is missing fields from the Yomitan configuration.')
         if live['deck'] not in self.anki('deckNames'):
+            if live['deck'] in ('', 'YOUR_DECK'):
+                raise MiningError('No Anki deck is set up yet. Copy mining-settings.example.json to '
+                                  + str(user_settings_path()) + ' and fill in your deck, note type and fields '
+                                  '(see the README).')
             raise MiningError('The selected Anki deck does not exist.')
         note = {'deckName': live['deck'], 'modelName': live['model'], 'fields': fields,
                 'tags': self.anki_config.get('tags', []),

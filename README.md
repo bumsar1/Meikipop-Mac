@@ -1,6 +1,6 @@
 # Meikipop for macOS
 
-A private backup of a customized Meikipop 2.0.5 for Apple Silicon, with Japanese OCR, Shift lookups, Yomitan/Anki integration, window screenshots, and optional game audio.
+A customized [Meikipop](https://github.com/rtr46/meikipop) 2.0.5 for Apple Silicon Macs: a Japanese popup dictionary for games. It has Shift lookups, Yomitan/Anki integration, window screenshots on cards and optional game audio. It reads text with local OCR, or straight from the game engine for games started from [VN Library](https://github.com/bumsar1/VNLibrary) (no OCR).
 
 ## Download
 
@@ -8,7 +8,20 @@ Download **Meikipop-macOS.dmg** from [Releases](https://github.com/bumsar1/Meiki
 
 The app runs in the menu bar. Choose **Quit** to exit or **Pause meikipop** to pause scanning and audio capture. Grant the permissions below before you play.
 
-The release includes Python, local OCR models, a dictionary, and the existing personal Anki field mapping. It is a private backup for the original Mac setup, not a general-purpose installer. Keep Anki with AnkiConnect and the browser with Yomitan API open. The separately installed Yomitan API component still uses the existing Python installation; this app does not install that component.
+The release includes Python, local OCR models and a dictionary. Lookups work out of the box. For Anki cards and Yomitan's pronunciation, keep Anki with AnkiConnect and the browser with Yomitan open, with the [Yomitan API](https://github.com/yomidevs/yomitan-api) component installed; this app doesn't install it. Then set up your deck as below. The app is not Apple-notarized: the first time, right-click it → **Open**.
+
+## Anki setup
+
+Meikipop renders cards through Yomitan's own Anki templates and sends them with AnkiConnect.
+
+1. Copy [mining-settings.example.json](mining-settings.example.json) to `~/Library/Application Support/meikipop/mining-settings.json`.
+2. Fill in your deck (`deck`), note type (`model`) and field mapping in it, as in Yomitan's Anki settings.
+
+Until then, adding a card says that no deck is set up; everything else works.
+
+## Engine text instead of OCR
+
+Games started from VN Library with its **Text hook** switch on send the text they show, with each character's position, to `ws://127.0.0.1:6677`. This covers Siglus, KiriKiri and BGI games on VN Library's bundled engines. Meikipop connects to it on its own, so Shift over a line looks it up at once, without OCR, and the Anki sentence is the exact line. Menus and choices are still read with OCR when you hold Shift over them.
 
 ## Permissions: grant everything before you play
 
