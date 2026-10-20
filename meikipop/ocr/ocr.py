@@ -46,7 +46,10 @@ class OcrProcessor(threading.Thread):
                     f"{self.ocr_backend.NAME} found {len(ocr_result) if ocr_result else 0} paragraphs in {(time.perf_counter() - start_time):.3f}s.")
                 # todo keep last ocr result?
 
-                if ocr_result:
+                # A hooked engine logs its own lines exactly; OCR then only
+                # serves lookups (menus, choices) and would count misreads.
+                engine = getattr(self.shared_state, "engine_text", None)
+                if ocr_result and not (engine is not None and engine.connected):
                     self.read_log.record(ocr_result, getattr(self.screen_manager, 'capture_window_pid', None))
                 self.shared_state.hit_scan_queue.put(FrameParagraphs(
                     ocr_result, screenshot.info.get("mining_window_frame"),

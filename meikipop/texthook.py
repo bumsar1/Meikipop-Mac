@@ -35,7 +35,8 @@ class EngineText(threading.Thread):
         self._lines = []      # [(text, [(ch, x, y, w, h) in screen points])]
         self._view = None     # (x, y, w, h) in points
         self.on_change = None  # called (from this thread) whenever the shown text changes
-        self.pid_source = None  # -> the game's pid, for the read log
+        self.pid_source = None  # -> the followed window's pid, if the engine doesn't say
+        self.engine_pid = None  # the engine's own pid (events carry it); VN Library matches it to the game
 
     # --- what the rest of Meikipop asks -------------------------------------------------------
 
@@ -85,6 +86,7 @@ class EngineText(threading.Thread):
             if self.connected:
                 logger.info("Engine text hook disconnected.")
             self.connected = False
+            self.engine_pid = None
             self._set_lines([])
             time.sleep(2)
 
@@ -94,6 +96,8 @@ class EngineText(threading.Thread):
         except ValueError:
             return
         kind = event.get("kind")
+        if isinstance(event.get("pid"), int) and event["pid"] > 0:
+            self.engine_pid = event["pid"]
         view = event.get("view")
         if view:
             with self._lock:
@@ -144,7 +148,7 @@ class EngineText(threading.Thread):
         if self.read_log is None:
             return
         box = BoundingBox(0.5, 0.5, 1.0, 1.0)
-        pid = self.pid_source() if self.pid_source else None
+        pid = self.engine_pid or (self.pid_source() if self.pid_source else None)
         self.read_log.record([Paragraph(text, [], box, False)], pid)
 
     @staticmethod

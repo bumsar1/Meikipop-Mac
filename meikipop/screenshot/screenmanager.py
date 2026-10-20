@@ -82,9 +82,9 @@ class ScreenManager(threading.Thread):
                 if self.showing_engine_text:
                     self.shared_state.hit_scan_queue.put(FrameParagraphs([]))
                     self.showing_engine_text = False
-                if (engine is not None and engine.has_text() and config.auto_scan_mode
+                if (engine is not None and engine.connected and config.auto_scan_mode
                         and not getattr(self.input_loop, "hotkey_is_pressed", False)):
-                    # The game's lines come from the engine; OCR the rest (menus, choices) only on Shift.
+                    # A hooked game's lines come from the engine; OCR the rest (menus, choices) only on Shift.
                     self._sleep_and_handle_loop_exit(0.1)
                     continue
                 if self.monitor is None:  # still waiting for the game window
