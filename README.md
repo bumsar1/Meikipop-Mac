@@ -23,6 +23,10 @@ Until then, adding a card says that no deck is set up; everything else works.
 
 Games started from VN Library with its **Text hook** switch on send the text they show, with each character's position, to `ws://127.0.0.1:6677`. This covers Siglus, KiriKiri and BGI games on VN Library's bundled engines. Meikipop connects to it on its own, so Shift over a line looks it up at once, without OCR, and the Anki sentence is the exact line. Menus and choices are still read with OCR when you hold Shift over them.
 
+<p align="center">
+  <img src="docs/engine-text.png" width="760" alt="Shift over 鏡 in Summer Pockets: looked up from the engine's text, no OCR">
+</p>
+
 ## Permissions: grant everything before you play
 
 Do this once so no prompt interrupts a full-screen game. In **System Settings → Privacy & Security**, switch on:
